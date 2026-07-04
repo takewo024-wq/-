@@ -40,6 +40,9 @@ export async function POST(req: NextRequest) {
       max_tokens: 2048,
       system: employee.systemPrompt,
       messages: body.messages.map((m) => ({ role: m.role, content: m.content })),
+      ...(employee.webSearch
+        ? { tools: [{ type: "web_search_20260209" as const, name: "web_search" as const }] }
+        : {}),
     });
 
     const text = response.content
