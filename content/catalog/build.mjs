@@ -319,3 +319,15 @@ const html = `<title>戦国クロニクル — 作品一覧</title>
 
 writeFileSync('/home/user/-/content/catalog/index.html', html);
 console.log('wrote index.html', (Buffer.byteLength(html) / 1024).toFixed(0) + 'KB');
+
+// Standalone document for hosting anywhere (GitHub Pages, local, etc.).
+// The <title>/<style> sit in <head>; the parser opens <body> implicitly at <header>.
+const standalone = `<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+${html}
+</html>`;
+writeFileSync('/home/user/-/content/catalog/standalone.html', standalone);
+console.log('wrote standalone.html', (Buffer.byteLength(standalone) / 1024).toFixed(0) + 'KB');
