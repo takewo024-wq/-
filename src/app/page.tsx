@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { employeeList, employees, EmployeeId } from "@/lib/employees";
+import { companies, employeeList, employees, EmployeeId } from "@/lib/employees";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -59,25 +59,34 @@ export default function Home() {
     <div className="flex flex-1 h-full">
       <aside className="w-64 shrink-0 border-r border-black/10 dark:border-white/10 flex flex-col">
         <div className="p-4 border-b border-black/10 dark:border-white/10">
-          <h1 className="font-semibold text-lg">🏢 AI社員の会社</h1>
+          <h1 className="font-semibold text-lg">🗼 AIカンパニーグループ</h1>
         </div>
         <nav className="flex-1 overflow-y-auto">
-          {employeeList.map((e) => (
-            <button
-              key={e.id}
-              onClick={() => setActiveId(e.id)}
-              className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-black/5 dark:border-white/5 transition-colors ${
-                activeId === e.id
-                  ? "bg-black/5 dark:bg-white/10"
-                  : "hover:bg-black/5 dark:hover:bg-white/5"
-              }`}
-            >
-              <span className="text-2xl">{e.avatar}</span>
-              <span>
-                <div className="font-medium">{e.name}</div>
-                <div className="text-xs opacity-60">{e.role}</div>
-              </span>
-            </button>
+          {Object.values(companies).map((c) => (
+            <section key={c.id}>
+              <h2 className="px-4 py-2 text-xs font-semibold opacity-60 bg-black/[.03] dark:bg-white/[.06] border-b border-black/5 dark:border-white/5">
+                {c.emoji} {c.name}
+              </h2>
+              {employeeList
+                .filter((e) => e.company === c.id)
+                .map((e) => (
+                  <button
+                    key={e.id}
+                    onClick={() => setActiveId(e.id)}
+                    className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-black/5 dark:border-white/5 transition-colors ${
+                      activeId === e.id
+                        ? "bg-black/5 dark:bg-white/10"
+                        : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="text-2xl">{e.avatar}</span>
+                    <span>
+                      <div className="font-medium">{e.name}</div>
+                      <div className="text-xs opacity-60">{e.role}</div>
+                    </span>
+                  </button>
+                ))}
+            </section>
           ))}
         </nav>
       </aside>
@@ -87,7 +96,9 @@ export default function Home() {
           <span className="text-2xl">{activeEmployee.avatar}</span>
           <div>
             <div className="font-medium">{activeEmployee.name}</div>
-            <div className="text-xs opacity-60">{activeEmployee.role}</div>
+            <div className="text-xs opacity-60">
+              {companies[activeEmployee.company].name} · {activeEmployee.role}
+            </div>
           </div>
         </header>
 
