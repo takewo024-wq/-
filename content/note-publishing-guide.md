@@ -82,14 +82,18 @@
 
 ## 一覧ページ(catalog)の公開 — GitHub Pagesの手順
 
-noteの記事にはできないので、単体HTMLを外部で公開してリンクする。GitHub Pagesが手軽:
+noteの記事にはできないので、単体HTMLを外部で公開してリンクする。**公開用ファイルは配置済み**:
 
-1. `content/catalog/standalone.html` をリポジトリの `docs/index.html` にコピーする(Pagesは各ブランチの直下か `docs/` しか配信できないため)。
-2. このブランチを既定ブランチ(main)にマージする。
-3. GitHubのリポジトリ設定 → Pages → Source を「main / docs」に設定して保存。
-4. 数十秒後に `https://<ユーザー名>.github.io/<リポジトリ名>/` で公開される。そのURLをnoteのプロフィールや各記事末尾に貼る。
+- `docs/index.html` … 一覧ページ(公開サイト本体)。`content/catalog/standalone.html` のコピー。
+- `docs/.nojekyll` … GitHubのJekyll処理をスキップする空ファイル。
 
-※ Pagesの有効化はGitHub上の操作が必要(こちらから自動では有効化できない)。`docs/` へのコピー自体は依頼あれば用意する。
+残りの操作(GitHub上での操作が必要。こちらからは自動有効化できない):
+
+1. このブランチを既定ブランチ(main)にマージする。
+2. リポジトリ設定 → Pages → Source を「Deploy from a branch」、ブランチ「main」/フォルダ「/docs」に設定して保存。
+3. 数十秒後に `https://<ユーザー名>.github.io/<リポジトリ名>/` で公開される。そのURLをnoteのプロフィールや各記事末尾に貼る。
+
+※ 一覧ページを更新したら、`node content/catalog/build.mjs` で `standalone.html` を作り直し、`docs/index.html` に上書きコピーする。`docs/` には公開してよいファイルだけを置く(社内資料の企画・考証メモは `content/` に置く)。
 
 ## 権利面(公開前チェック)
 
