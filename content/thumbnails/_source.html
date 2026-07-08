@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#333; font-family:"IPAGothic","IPA Pゴシック",sans-serif; }
+  .card {
+    position:relative; width:1280px; height:670px; overflow:hidden;
+    margin:20px auto; color:#f5efe4;
+  }
+  .frame {
+    position:absolute; inset:26px; border:2px solid rgba(201,162,75,.55);
+    pointer-events:none; z-index:5;
+  }
+  .frame::after {
+    content:""; position:absolute; inset:6px; border:1px solid rgba(201,162,75,.25);
+  }
+  .kamon {
+    position:absolute; right:-70px; top:50%; transform:translateY(-50%);
+    width:620px; height:620px; opacity:.14; z-index:1;
+  }
+  .kamon.small {
+    right:56px; top:52px; bottom:auto; transform:none;
+    width:104px; height:104px; opacity:.85;
+  }
+  .inner {
+    position:absolute; left:96px; top:0; height:100%; width:770px;
+    display:flex; flex-direction:column; justify-content:center; z-index:4;
+    padding-bottom:8px;
+  }
+  .kicker { display:flex; align-items:center; gap:18px; margin-bottom:26px; }
+  .kicker .label {
+    font-size:26px; letter-spacing:.42em; color:#c9a24b; text-indent:.42em;
+  }
+  .kicker .rule { flex:1; height:1px; background:linear-gradient(90deg,#c9a24b,rgba(201,162,75,0)); }
+  .ep {
+    display:inline-block; font-size:30px; letter-spacing:.28em; text-indent:.28em;
+    color:#f5efe4; border:1.5px solid rgba(245,239,228,.6);
+    padding:8px 20px; margin-bottom:30px; align-self:flex-start;
+  }
+  .name {
+    font-size:120px; line-height:1.02; letter-spacing:.08em;
+    -webkit-text-stroke:1.4px currentColor; margin-bottom:4px;
+  }
+  .accentline { width:190px; height:6px; margin:20px 0 26px; }
+  .subtitle { font-size:34px; line-height:1.45; letter-spacing:.03em; color:#f0e9da; font-weight:normal; max-width:700px; }
+  .badge-wrap { margin-top:34px; }
+  .badge-free {
+    display:inline-block;
+    font-size:31px; letter-spacing:.14em; text-indent:.14em; color:#fff;
+    background:#b23a2e; padding:13px 30px; font-weight:normal;
+    box-shadow:0 4px 18px rgba(0,0,0,.35);
+  }
+  .badge-paid {
+    display:inline-block;
+    font-size:29px; letter-spacing:.12em; text-indent:.12em; color:#c9a24b;
+    border:1.5px solid #c9a24b; padding:12px 28px;
+  }
+  .brand { position:absolute; right:70px; bottom:60px; z-index:4;
+    font-size:24px; letter-spacing:.2em; text-indent:.2em; color:rgba(245,239,228,.6); }
+  /* vignette */
+  .card::after {
+    content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:radial-gradient(120% 90% at 22% 45%, rgba(0,0,0,0) 40%, rgba(0,0,0,.45) 100%);
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ---- kamon SVGs ----
+function kikyo(color){
+  // 5-petal bellflower (Akechi kikyo-mon) — almond petals with gaps, pointed tips
+  let petals="";
+  for(let i=0;i<5;i++){
+    petals+=`<path d="M100,98 C84,64 86,40 100,15 C114,40 116,64 100,98 Z" fill="${color}" transform="rotate(${i*72} 100 100)"/>`;
+  }
+  return `<svg class="__k" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <g>${petals}<circle cx="100" cy="100" r="12" fill="none" stroke="${color}" stroke-width="4"/></g>
+  </svg>`;
+}
+function fuji(color){
+  // hanging wisteria clusters (Kuroda motif / ep1 fuji)
+  function cluster(x,scale){
+    let s=`<g transform="translate(${x},18) scale(${scale})">`;
+    s+=`<path d="M0,0 C-16,26 16,26 0,0" fill="${color}"/>`; // top leaves hint
+    // drooping raceme: circles decreasing
+    let y=14,r=15;
+    for(let i=0;i<7;i++){
+      const dx=(i%2? 1:-1)*(6- i*0.6);
+      s+=`<circle cx="${dx}" cy="${y}" r="${r}" fill="${color}"/>`;
+      y+=r*1.35; r*=0.86;
+    }
+    s+=`</g>`; return s;
+  }
+  return `<svg class="__k" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    ${cluster(60,1)}${cluster(105,1.25)}${cluster(150,0.9)}
+  </svg>`;
+}
+
+const data=[
+  // Mitsuhide — indigo/steel + kikyo, blue accent
+  {series:"m",name:"明智光秀",ep:"第一回",sub:"謎だらけの前半生 — 光秀はどこから来たのか",free:true},
+  {series:"m",name:"明智光秀",ep:"第二回",sub:"異例の大出世 — 信長がほれ込んだ男",free:false},
+  {series:"m",name:"明智光秀",ep:"第三回",sub:"本能寺への道 — 謀反の動機、諸説を検証する",free:false},
+  {series:"m",name:"明智光秀",ep:"第四回",sub:"山崎のあと — 天海伝説と明智の血のゆくえ",free:false},
+  // Kanbei — sumi/gold + fuji, wisteria accent
+  {series:"k",name:"黒田官兵衛",ep:"第一回",sub:"藤の花を見た男 — 姫路の若き軍師と有岡城の土牢",free:true},
+  {series:"k",name:"黒田官兵衛",ep:"第二回",sub:"御運が開けましたな — 天下を動かした一言",free:false},
+  {series:"k",name:"黒田官兵衛",ep:"第三回",sub:"恐れられた才 — 天下人が警戒した男",free:false},
+  {series:"k",name:"黒田官兵衛",ep:"第四回",sub:"もうひとつの関ヶ原 — 九州での大博打",free:false},
+];
+
+const theme={
+  m:{bg:"linear-gradient(135deg,#0d1320 0%,#16202f 55%,#0b111c 100%)",accent:"#6f9fd8",kamonColor:"#7ea9dd",accentline:"#b23a2e"},
+  k:{bg:"linear-gradient(135deg,#120e09 0%,#241a10 55%,#0f0b07 100%)",accent:"#a99bde",kamonColor:"#b6a24f",accentline:"#a8382b"},
+};
+
+const root=document.getElementById('root');
+data.forEach((d,idx)=>{
+  const t=theme[d.series];
+  const kamonBig = d.series==="m"? kikyo(t.kamonColor): fuji(t.kamonColor);
+  const kamonSmall = d.series==="m"? kikyo("#c9a24b"): fuji("#c9a24b");
+  const badge = d.free
+    ? `<div class="badge-wrap"><span class="badge-free">第1回 ／ 無料公開</span></div>`
+    : `<div class="badge-wrap"><span class="badge-paid">有料 ／ ¥300</span></div>`;
+  const el=document.createElement('div');
+  el.className='card'; el.id='card-'+idx;
+  el.style.background=t.bg;
+  el.innerHTML=`
+    <div class="kamon">${kamonBig}</div>
+    <div class="frame"></div>
+    <div class="inner">
+      <div class="kicker"><span class="label">戦国クロニクル</span><span class="rule"></span></div>
+      <span class="ep">${d.ep}</span>
+      <div class="name" style="color:${t.accent}">${d.name}</div>
+      <div class="accentline" style="background:${t.accentline}"></div>
+      <div class="subtitle">${d.sub}</div>
+      ${badge}
+    </div>
+    <div class="kamon small">${kamonSmall}</div>
+    <div class="brand">戦国クロニクル製作</div>
+  `;
+  root.appendChild(el);
+});
+</script>
+</body>
+</html>
