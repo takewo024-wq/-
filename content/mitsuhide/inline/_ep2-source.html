@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#333;font-family:"IPAGothic","IPA Pゴシック",sans-serif;}
+  .band{position:relative;width:1280px;height:440px;overflow:hidden;color:#f4efe4;
+    margin:18px auto;background:linear-gradient(135deg,#0d1320 0%,#16202f 58%,#0b111c 100%);}
+  .frame{position:absolute;inset:22px;border:1.5px solid rgba(201,162,75,.5);z-index:4;pointer-events:none;}
+  .frame::after{content:"";position:absolute;inset:5px;border:1px solid rgba(201,162,75,.22);}
+  .wm{position:absolute;right:-40px;top:50%;transform:translateY(-50%);width:400px;height:400px;opacity:.06;z-index:1;}
+  .inner{position:absolute;left:84px;top:0;height:100%;display:flex;flex-direction:column;justify-content:center;z-index:3;width:620px;}
+  .idx{font-size:22px;letter-spacing:.4em;text-indent:.4em;color:#c9a24b;margin-bottom:20px;}
+  .ttl{font-size:62px;line-height:1.14;letter-spacing:.06em;color:#8bb4e8;
+    -webkit-text-stroke:1px currentColor;text-wrap:balance;}
+  .accent{width:150px;height:5px;background:#b23a2e;margin:24px 0 20px;}
+  .sub{font-size:24px;line-height:1.6;color:#e7dfce;font-weight:normal;letter-spacing:.03em;max-width:19em;}
+  .art{position:absolute;right:96px;top:50%;transform:translateY(-50%);width:300px;height:300px;z-index:2;}
+  .art svg{width:100%;height:100%;display:block;overflow:visible;}
+  .band::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(120% 90% at 20% 50%,rgba(0,0,0,0) 45%,rgba(0,0,0,.5) 100%);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const G="#c9a24b", I="#8bb4e8", V="#c0453a", INK="#e7dfce";
+// ---- kikyo watermark ----
+function kikyo(c){let p="";for(let i=0;i<5;i++)p+=`<path d="M100,98 C84,64 86,40 100,15 C114,40 116,64 100,98 Z" fill="${c}" transform="rotate(${i*72} 100 100)"/>`;
+  return `<svg viewBox="0 0 200 200">${p}<circle cx="100" cy="100" r="12" fill="none" stroke="${c}" stroke-width="4"/></svg>`;}
+
+// ---- motifs (200x200 viewBox, line art) ----
+const motif={
+  castle:`<svg viewBox="0 0 200 200" fill="none" stroke="${G}" stroke-width="2.4" stroke-linejoin="round">
+    <!-- lake lines -->
+    <g stroke="${I}" stroke-width="2" opacity=".8">
+      <path d="M20,168 q18,-8 36,0 t36,0 t36,0 t36,0"/>
+      <path d="M20,182 q18,-8 36,0 t36,0 t36,0 t36,0"/></g>
+    <!-- tenshu -->
+    <path d="M100,34 l16,12 h-32 z" fill="${G}" fill-opacity=".15"/>
+    <path d="M78,60 h44 l10,10 h-64 z"/>
+    <rect x="86" y="70" width="28" height="16"/>
+    <path d="M70,96 h60 l10,10 h-80 z"/>
+    <rect x="78" y="106" width="44" height="20"/>
+    <path d="M58,136 h84 l12,12 h-108 z"/>
+    <rect x="66" y="148" width="68" height="20"/>
+    <line x1="100" y1="22" x2="100" y2="34"/>
+  </svg>`,
+  fork:`<svg viewBox="0 0 200 200" fill="none" stroke-linecap="round">
+    <!-- diverging paths -->
+    <path d="M100,180 C90,130 60,110 34,64" stroke="${I}" stroke-width="3"/>
+    <path d="M100,180 C110,130 140,110 166,64" stroke="${G}" stroke-width="3"/>
+    <!-- banners -->
+    <g stroke="${G}" stroke-width="2.4">
+      <line x1="34" y1="64" x2="34" y2="20"/>
+      <path d="M34,24 h26 l-7,9 l7,9 h-26 z" fill="${I}" fill-opacity=".2"/></g>
+    <g stroke="${V}" stroke-width="2.4">
+      <line x1="166" y1="64" x2="166" y2="20"/>
+      <path d="M166,24 h-26 l7,9 l-7,9 h26 z" fill="${V}" fill-opacity=".2"/></g>
+    <circle cx="100" cy="180" r="4" fill="${G}"/>
+  </svg>`,
+  seal:`<svg viewBox="0 0 200 200">
+    <rect x="52" y="34" width="96" height="132" rx="6" fill="none" stroke="${V}" stroke-width="4"/>
+    <rect x="60" y="42" width="80" height="116" rx="3" fill="${V}" fill-opacity=".12"/>
+    <g fill="${V}" font-family="'IPAGothic',serif" font-size="34" text-anchor="middle">
+      <text x="80" y="74">惟</text><text x="120" y="74">任</text>
+      <text x="80" y="116">日</text><text x="120" y="116">向</text>
+      <text x="100" y="152">守</text>
+    </g>
+  </svg>`,
+  tanba:`<svg viewBox="0 0 200 200" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <!-- mountains -->
+    <path d="M8,168 L58,86 L92,140 L128,70 L172,168 Z" stroke="${I}" stroke-width="2.6" fill="${I}" fill-opacity=".08"/>
+    <path d="M40,168 L96,104 L150,168 Z" stroke="${G}" stroke-width="2.4" fill="none"/>
+    <!-- crossed spears -->
+    <g stroke="${G}" stroke-width="2.6">
+      <line x1="56" y1="176" x2="150" y2="52"/>
+      <line x1="150" y1="176" x2="56" y2="52"/>
+      <path d="M150,52 l10,-12 l-2,15 z" fill="${G}"/>
+      <path d="M56,52 l-10,-12 l2,15 z" fill="${G}"/></g>
+  </svg>`,
+  torii:`<svg viewBox="0 0 200 200" fill="none" stroke="${V}" stroke-width="3" stroke-linecap="round">
+    <path d="M34,52 q66,-16 132,0 l-6,14 q-60,-14 -120,0 z" fill="${V}" fill-opacity=".16"/>
+    <rect x="46" y="74" width="108" height="11" fill="${V}" fill-opacity=".16"/>
+    <line x1="58" y1="52" x2="70" y2="176"/>
+    <line x1="142" y1="52" x2="130" y2="176"/>
+    <line x1="100" y1="85" x2="100" y2="104"/>
+    <g stroke="${I}" stroke-width="2" opacity=".8">
+      <path d="M30,186 q20,-7 40,0 t40,0 t40,0"/></g>
+  </svg>`,
+  flame:`<svg viewBox="0 0 200 200" fill="none" stroke-linecap="round">
+    <!-- smoke -->
+    <g stroke="${INK}" stroke-width="2" opacity=".45">
+      <path d="M100,64 q-22,-20 -6,-42 q-14,20 6,34"/>
+      <path d="M116,70 q26,-16 12,-42 q10,22 -10,34"/></g>
+    <!-- flame -->
+    <path d="M100,178 C58,150 66,110 92,92 C86,116 108,116 104,88
+      C118,104 138,120 132,150 C128,168 116,178 100,178 Z"
+      fill="${V}" fill-opacity=".22" stroke="${V}" stroke-width="3"/>
+    <path d="M100,168 C82,152 86,128 100,116 C98,132 112,132 108,118
+      C118,132 116,150 100,168 Z" fill="${G}" fill-opacity=".4" stroke="${G}" stroke-width="2"/>
+  </svg>`,
+};
+
+const data=[
+  {idx:"其の一",ttl:"坂本城主への抜擢",sub:"焼き討ちの直後、光秀は琵琶湖のほとりに城を得た。秀吉より早い出世。",art:"castle"},
+  {idx:"其の二",ttl:"幕府との決別",sub:"将軍か、信長か。両属の男は、古巣を自らの手で切り捨てる。",art:"fork"},
+  {idx:"其の三",ttl:"惟任日向守",sub:"九州ゆかりの姓と官。名乗りが告げる、重臣層への仲間入り。",art:"seal"},
+  {idx:"其の四",ttl:"丹波攻略・五年の死闘",sub:"赤鬼の大敗、味方の裏切り。山国を平定するまでの長い戦い。",art:"tanba"},
+  {idx:"其の五",ttl:"神として祀られる男",sub:"由良川を治め、城下を潤す。福知山の人々は光秀を神に祀った。",art:"torii"},
+  {idx:"其の六",ttl:"絶頂、そして天正十年",sub:"近畿方面軍の司令官へ。西へ向かうはずの軍は、本能寺を指す。",art:"flame"},
+];
+
+const root=document.getElementById('root');
+data.forEach((d,i)=>{
+  const el=document.createElement('div');
+  el.className='band';el.id='b'+i;
+  el.innerHTML=`
+    <div class="wm">${kikyo(I)}</div>
+    <div class="frame"></div>
+    <div class="inner">
+      <div class="idx">${d.idx}</div>
+      <div class="ttl">${d.ttl}</div>
+      <div class="accent"></div>
+      <div class="sub">${d.sub}</div>
+    </div>
+    <div class="art">${motif[d.art]}</div>`;
+  root.appendChild(el);
+});
+</script>
+</body>
+</html>
