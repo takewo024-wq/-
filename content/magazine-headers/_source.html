@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#333;font-family:"IPAGothic","IPA Pゴシック",sans-serif;}
+  .hd{position:relative;width:1920px;height:1006px;overflow:hidden;color:#f5efe4;margin:20px auto;}
+  .frame{position:absolute;inset:40px;border:2px solid rgba(201,162,75,.55);z-index:5;pointer-events:none;}
+  .frame::after{content:"";position:absolute;inset:9px;border:1px solid rgba(201,162,75,.25);}
+  .wm{position:absolute;right:-90px;top:50%;transform:translateY(-50%);width:900px;height:900px;opacity:.12;z-index:1;}
+  .wm2{position:absolute;right:120px;bottom:96px;width:150px;height:150px;opacity:.9;z-index:3;}
+  .inner{position:absolute;left:130px;top:0;height:100%;width:1120px;display:flex;flex-direction:column;justify-content:center;z-index:4;}
+  .kicker{display:flex;align-items:center;gap:26px;margin-bottom:40px;}
+  .kicker .en{font-size:30px;letter-spacing:.6em;text-indent:.6em;color:#c9a24b;font-weight:600;}
+  .kicker .rule{width:280px;height:1px;background:linear-gradient(90deg,#c9a24b,rgba(201,162,75,0));}
+  .name{font-size:190px;line-height:1.02;letter-spacing:.09em;-webkit-text-stroke:1.6px currentColor;}
+  .name.brand{font-size:132px;}
+  .accent{height:8px;margin:34px 0 30px;}
+  .sub{font-size:52px;letter-spacing:.14em;color:#f0e9da;font-weight:normal;margin-bottom:34px;}
+  .logline{font-size:38px;line-height:1.7;color:#d9cfba;font-weight:normal;letter-spacing:.03em;max-width:20em;}
+  .label{align-self:flex-start;margin-top:46px;font-size:32px;letter-spacing:.24em;text-indent:.24em;
+    color:#c9a24b;border:1.6px solid #c9a24b;padding:14px 34px;}
+  .hd::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(115% 90% at 22% 50%,rgba(0,0,0,0) 45%,rgba(0,0,0,.5) 100%);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+function kikyo(c){let p="";for(let i=0;i<5;i++)p+=`<path d="M100,98 C84,64 86,40 100,15 C114,40 116,64 100,98 Z" fill="${c}" transform="rotate(${i*72} 100 100)"/>`;
+  return `<svg viewBox="0 0 200 200">${p}<circle cx="100" cy="100" r="12" fill="none" stroke="${c}" stroke-width="4"/></svg>`;}
+function fuji(c){function cl(x,s){let g=`<g transform="translate(${x},20) scale(${s})">`;let y=12,r=15;
+  for(let i=0;i<6;i++){const dx=(i%2?1:-1)*(6-i*0.6);g+=`<circle cx="${dx}" cy="${y}" r="${r}" fill="${c}"/>`;y+=r*1.35;r*=0.86;}return g+'</g>';}
+  return `<svg viewBox="0 0 200 200">${cl(70,1)}${cl(110,1.22)}${cl(150,0.85)}</svg>`;}
+
+const data=[
+  {slug:'mitsuhide',bg:'linear-gradient(135deg,#0d1320 0%,#16202f 58%,#0b111c 100%)',
+   accent:'#8bb4e8',line:'#b23a2e',crest:'kikyo',crestC:'#7ea9dd',
+   name:'明智光秀',sub:'謎だらけの生涯',logline:'「主殺し」の汚名を着た男の、本当の生涯。史料でたどる全4回。',label:'連 載 ・ 全 四 回'},
+  {slug:'kanbei',bg:'linear-gradient(135deg,#120e09 0%,#241a10 58%,#0f0b07 100%)',
+   accent:'#bcb0e8',line:'#a8382b',crest:'fuji',crestC:'#b6a24f',
+   name:'黒田官兵衛',sub:'天下を狙った軍師',logline:'秀吉が恐れ、一度だけ天下に手を伸ばした軍師の生涯。全4回。',label:'連 載 ・ 全 四 回'},
+  {slug:'brand',bg:'linear-gradient(135deg,#14100b 0%,#241c11 58%,#100c07 100%)',
+   accent:'#c9a24b',line:'#b23a2e',crest:'both',crestC:'#c9a24b',brand:true,
+   name:'戦国クロニクル',sub:'',logline:'放送ではわからない、その生涯を。史料でたどる戦国武将の連載読み物。',label:'月 額 マ ガ ジ ン'},
+];
+
+const root=document.getElementById('root');
+data.forEach((d,i)=>{
+  const wmSvg = d.crest==='kikyo'?kikyo(d.crestC): d.crest==='fuji'?fuji(d.crestC): kikyo(d.crestC);
+  const wm2Svg = d.crest==='both'
+    ? `<div style="display:flex;gap:8px">${kikyo('#c9a24b')}${fuji('#c9a24b')}</div>`
+    : (d.crest==='kikyo'?kikyo('#c9a24b'):fuji('#c9a24b'));
+  const el=document.createElement('div');
+  el.className='hd';el.id='h'+i;el.style.background=d.bg;
+  el.innerHTML=`
+    <div class="wm">${wmSvg}</div>
+    <div class="frame"></div>
+    <div class="inner">
+      <div class="kicker"><span class="en">SENGOKU CHRONICLE</span><span class="rule"></span></div>
+      <div class="name ${d.brand?'brand':''}" style="color:${d.accent}">${d.name}</div>
+      <div class="accent" style="background:${d.line};width:${d.brand?'320px':'240px'}"></div>
+      ${d.sub?`<div class="sub">${d.sub}</div>`:''}
+      <div class="logline">${d.logline}</div>
+      <div class="label">${d.label}</div>
+    </div>
+    <div class="wm2">${wm2Svg}</div>`;
+  root.appendChild(el);
+});
+</script>
+</body>
+</html>
