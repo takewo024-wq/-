@@ -7,23 +7,33 @@ const base = '/home/user/-/content';
 const out = base + '/note-ready';
 mkdirSync(out, { recursive: true });
 
+// タイトルは検索流入を狙い「武将名を先頭」に置く(note内検索・Google対策)。
+const T = ['戦国', '日本史', '歴史'];
 const articles = [
   { file: 'mitsuhide/ep1-free.md', slug: 'mitsuhide-ep1', img: 'mitsuhide-ep1.png', paid: false,
-    title: '【第1回】謎だらけの前半生 — 光秀はどこから来たのか' },
+    title: '明智光秀、謎だらけの前半生──光秀はどこから来たのか【第1回・無料】',
+    tags: ['明智光秀', ...T, '戦国武将'] },
   { file: 'mitsuhide/ep2-paid.md', slug: 'mitsuhide-ep2', img: 'mitsuhide-ep2.png', paid: true,
-    title: '【第2回】異例の大出世 — 信長がほれ込んだ男' },
+    title: '明智光秀の異例の大出世──信長がほれ込んだ男【第2回】',
+    tags: ['明智光秀', ...T, '織田信長'] },
   { file: 'mitsuhide/ep3-paid.md', slug: 'mitsuhide-ep3', img: 'mitsuhide-ep3.png', paid: true,
-    title: '【第3回】本能寺への道 — 謀反の動機、諸説を検証する' },
+    title: '明智光秀はなぜ信長を討ったのか──本能寺の変・動機の諸説【第3回】',
+    tags: ['明智光秀', '本能寺の変', ...T] },
   { file: 'mitsuhide/ep4-paid.md', slug: 'mitsuhide-ep4', img: 'mitsuhide-ep4.png', paid: true,
-    title: '【第4回】山崎のあと — 天海伝説と明智の血のゆくえ' },
+    title: '明智光秀の最期と子孫──山崎の戦い、天海伝説の真相【第4回】',
+    tags: ['明智光秀', '細川ガラシャ', ...T] },
   { file: 'kanbei/ep1-free.md', slug: 'kanbei-ep1', img: 'kanbei-ep1.png', paid: false,
-    title: '【第1回】藤の花を見た男 — 姫路の若き軍師と有岡城の土牢' },
+    title: '黒田官兵衛、有岡城の土牢を生きた男──若き軍師の原点【第1回・無料】',
+    tags: ['黒田官兵衛', '有岡城', ...T] },
   { file: 'kanbei/ep2-paid.md', slug: 'kanbei-ep2', img: 'kanbei-ep2.png', paid: true,
-    title: '【第2回】御運が開けましたな — 天下を動かした一言' },
+    title: '黒田官兵衛「御運が開けましたな」──本能寺と中国大返しの真実【第2回】',
+    tags: ['黒田官兵衛', '豊臣秀吉', ...T] },
   { file: 'kanbei/ep3-paid.md', slug: 'kanbei-ep3', img: 'kanbei-ep3.png', paid: true,
-    title: '【第3回】恐れられた才 — 天下人が警戒した男' },
+    title: '黒田官兵衛はなぜ恐れられたのか──天下人が警戒した軍師【第3回】',
+    tags: ['黒田官兵衛', '軍師', ...T] },
   { file: 'kanbei/ep4-paid.md', slug: 'kanbei-ep4', img: 'kanbei-ep4.png', paid: true,
-    title: '【第4回】もうひとつの関ヶ原 — 九州での大博打' },
+    title: '黒田官兵衛、最後の大博打──もうひとつの関ヶ原・九州の戦い【第4回】',
+    tags: ['黒田官兵衛', '関ヶ原の戦い', ...T] },
 ];
 
 const PAYWALL = '━━━━━━━━━━ ここから下を「有料エリア」に設定 ━━━━━━━━━━';
@@ -83,6 +93,7 @@ for (const a of articles) {
     `タイトル欄        : ${a.title}`,
     `見出し画像        : content/thumbnails/${a.img}`,
     `価格              : ${a.paid ? '¥300(有料note)' : '無料'}`,
+    `ハッシュタグ      : ${a.tags.map((t) => '#' + t).join(' ')}`,
     '',
     '貼り付け後にツールバーで整える箇所:',
     `  ・「見出し」に設定する行(本文中に上から順): ${headings.map((h) => `「${h}」`).join(' / ')}`,
