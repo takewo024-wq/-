@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#333;font-family:"IPAGothic","IPA Pゴシック",sans-serif;}
+  .band{position:relative;width:1280px;height:440px;overflow:hidden;color:#f4efe4;
+    margin:18px auto;background:linear-gradient(135deg,#0d1320 0%,#16202f 58%,#0b111c 100%);}
+  .frame{position:absolute;inset:22px;border:1.5px solid rgba(201,162,75,.5);z-index:4;pointer-events:none;}
+  .frame::after{content:"";position:absolute;inset:5px;border:1px solid rgba(201,162,75,.22);}
+  .wm{position:absolute;right:-40px;top:50%;transform:translateY(-50%);width:400px;height:400px;opacity:.06;z-index:1;}
+  .inner{position:absolute;left:84px;top:0;height:100%;display:flex;flex-direction:column;justify-content:center;z-index:3;width:640px;}
+  .idx{font-size:22px;letter-spacing:.4em;text-indent:.4em;color:#c9a24b;margin-bottom:20px;}
+  .ttl{font-size:60px;line-height:1.14;letter-spacing:.05em;color:#8bb4e8;
+    -webkit-text-stroke:1px currentColor;text-wrap:balance;}
+  .accent{width:150px;height:5px;background:#b23a2e;margin:24px 0 20px;}
+  .sub{font-size:23px;line-height:1.6;color:#e7dfce;font-weight:normal;letter-spacing:.03em;max-width:20em;}
+  .art{position:absolute;right:92px;top:50%;transform:translateY(-50%);width:300px;height:300px;z-index:2;}
+  .art svg{width:100%;height:100%;display:block;overflow:visible;}
+  .band::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(120% 90% at 20% 50%,rgba(0,0,0,0) 45%,rgba(0,0,0,.5) 100%);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const G="#c9a24b", I="#8bb4e8", V="#c0453a", INK="#e7dfce";
+function kikyo(c){let p="";for(let i=0;i<5;i++)p+=`<path d="M100,98 C84,64 86,40 100,15 C114,40 116,64 100,98 Z" fill="${c}" transform="rotate(${i*72} 100 100)"/>`;
+  return `<svg viewBox="0 0 200 200">${p}<circle cx="100" cy="100" r="12" fill="none" stroke="${c}" stroke-width="4"/></svg>`;}
+
+const motif={
+  // 本能寺・未明: 寺の屋根 + 炎 + 有明の月
+  honnoji:`<svg viewBox="0 0 200 200" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <!-- moon -->
+    <path d="M150,44 a20,20 0 1 0 12,34 a15,15 0 1 1 -12,-34 Z" fill="${G}" fill-opacity=".5" stroke="${G}" stroke-width="1.5"/>
+    <!-- temple roof -->
+    <path d="M40,120 q60,-40 120,0 l-14,10 q-46,-30 -92,0 z" fill="${G}" fill-opacity=".18" stroke="${G}" stroke-width="2.4"/>
+    <line x1="100" y1="80" x2="100" y2="92" stroke="${G}" stroke-width="2.4"/>
+    <rect x="60" y="130" width="80" height="10" stroke="${G}" stroke-width="2" fill="none"/>
+    <g stroke="${G}" stroke-width="2"><line x1="70" y1="140" x2="70" y2="176"/><line x1="100" y1="140" x2="100" y2="176"/><line x1="130" y1="140" x2="130" y2="176"/></g>
+    <!-- flames -->
+    <g fill="${V}" fill-opacity=".8">
+      <path d="M78,176 c-6,-16 8,-20 4,-32 c10,8 12,20 6,32 z"/>
+      <path d="M104,176 c-8,-22 10,-26 5,-42 c14,10 16,28 7,42 z"/>
+      <path d="M128,176 c-6,-14 7,-18 3,-30 c10,8 11,20 5,30 z"/></g>
+  </svg>`,
+  // 怨恨: 断ち切られた絆(割れた輪)
+  urami:`<svg viewBox="0 0 200 200" fill="none" stroke-linecap="round">
+    <circle cx="100" cy="100" r="62" stroke="${G}" stroke-width="3" stroke-dasharray="150 40" transform="rotate(20 100 100)"/>
+    <!-- lightning crack -->
+    <path d="M100,30 L86,92 L112,100 L92,172" stroke="${V}" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="100" cy="100" r="6" fill="${V}"/>
+  </svg>`,
+  // 野望: 「ときは今」の短冊
+  yabou:`<svg viewBox="0 0 200 200">
+    <line x1="118" y1="20" x2="118" y2="40" stroke="${G}" stroke-width="2"/>
+    <rect x="96" y="40" width="44" height="150" rx="4" fill="${I}" fill-opacity=".14" stroke="${I}" stroke-width="2.4"/>
+    <g fill="${INK}" font-family="'IPAGothic',serif" font-size="26" text-anchor="middle">
+      <text x="118" y="74">と</text><text x="118" y="106">き</text>
+      <text x="118" y="138">は</text><text x="118" y="170">今</text></g>
+    <!-- small peak (ambition) -->
+    <path d="M40,150 L64,110 L88,150 Z" fill="none" stroke="${G}" stroke-width="2.4"/>
+  </svg>`,
+  // 黒幕: 幕と影と「?」
+  kuromaku:`<svg viewBox="0 0 200 200" fill="none" stroke-linecap="round">
+    <line x1="26" y1="44" x2="174" y2="44" stroke="${G}" stroke-width="3"/>
+    <path d="M30,46 q12,26 24,0 q12,26 24,0 q12,26 24,0 q12,26 24,0 q12,26 24,0 q12,26 24,0"
+      stroke="${V}" stroke-width="2.6" fill="${V}" fill-opacity=".12"/>
+    <text x="104" y="150" fill="${G}" font-family="'IPAGothic',serif" font-size="96" text-anchor="middle" font-weight="bold">?</text>
+  </svg>`,
+  // 四国説: 巻物(新史料)+ 朱印
+  shikoku:`<svg viewBox="0 0 200 200" fill="none" stroke-linejoin="round">
+    <rect x="46" y="66" width="108" height="72" fill="${INK}" fill-opacity=".1" stroke="${G}" stroke-width="2.4"/>
+    <g stroke="${I}" stroke-width="2.4"><!-- rollers -->
+      <rect x="36" y="58" width="12" height="88" rx="6" fill="${I}" fill-opacity=".2"/>
+      <rect x="152" y="58" width="12" height="88" rx="6" fill="${I}" fill-opacity=".2"/></g>
+    <g stroke="${INK}" stroke-width="2" opacity=".6">
+      <line x1="62" y1="84" x2="128" y2="84"/><line x1="62" y1="98" x2="138" y2="98"/>
+      <line x1="62" y1="112" x2="120" y2="112"/></g>
+    <rect x="120" y="116" width="20" height="20" rx="3" fill="${V}" fill-opacity=".7" stroke="${V}" stroke-width="1.5"/>
+  </svg>`,
+  // 結論: 天秤
+  tenbin:`<svg viewBox="0 0 200 200" fill="none" stroke-linecap="round" stroke="${G}" stroke-width="2.6">
+    <line x1="100" y1="34" x2="100" y2="150"/>
+    <path d="M70,150 h60"/>
+    <!-- beam slightly tilted -->
+    <line x1="48" y1="56" x2="152" y2="44"/>
+    <circle cx="100" cy="40" r="5" fill="${G}"/>
+    <!-- left pan lower -->
+    <line x1="48" y1="56" x2="34" y2="104"/><line x1="48" y1="56" x2="62" y2="104"/>
+    <path d="M30,104 a18,10 0 0 0 36,0 Z" fill="${I}" fill-opacity=".14"/>
+    <!-- right pan higher -->
+    <line x1="152" y1="44" x2="138" y2="88"/><line x1="152" y1="44" x2="166" y2="88"/>
+    <path d="M134,88 a18,10 0 0 0 36,0 Z" fill="${V}" fill-opacity=".14"/>
+  </svg>`,
+};
+
+const data=[
+  {idx:"其の一",ttl:"六月二日、未明",sub:"本能寺、炎上。すべては、この夜明け前に起きた。",art:"honnoji"},
+  {idx:"其の二",ttl:"説一・怨恨説",sub:"ドラマがいちばん好きな、積もり積もった恨みの物語。",art:"urami"},
+  {idx:"其の三",ttl:"説二・野望説",sub:"「ときは今」──連歌の一句に、天下への野心を読むか。",art:"yabou"},
+  {idx:"其の四",ttl:"説三・黒幕説",sub:"朝廷、義昭、秀吉、家康。糸を引いたのは、誰か。",art:"kuromaku"},
+  {idx:"其の五",ttl:"説四・四国説",sub:"2014年発見の新史料が推す、いま最も有力な動機。",art:"shikoku"},
+  {idx:"其の六",ttl:"結局、どれなのか",sub:"確かな正解はない。史料が示す濃淡を、静かに読む。",art:"tenbin"},
+];
+
+const root=document.getElementById('root');
+data.forEach((d,i)=>{
+  const el=document.createElement('div');
+  el.className='band';el.id='b'+i;
+  el.innerHTML=`
+    <div class="wm">${kikyo(I)}</div>
+    <div class="frame"></div>
+    <div class="inner">
+      <div class="idx">${d.idx}</div>
+      <div class="ttl">${d.ttl}</div>
+      <div class="accent"></div>
+      <div class="sub">${d.sub}</div>
+    </div>
+    <div class="art">${motif[d.art]}</div>`;
+  root.appendChild(el);
+});
+</script>
+</body>
+</html>
