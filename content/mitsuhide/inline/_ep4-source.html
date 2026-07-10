@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#333;font-family:"IPAGothic","IPA Pゴシック",sans-serif;}
+  .band{position:relative;width:1280px;height:440px;overflow:hidden;color:#f4efe4;
+    margin:18px auto;background:linear-gradient(135deg,#0d1320 0%,#16202f 58%,#0b111c 100%);}
+  .frame{position:absolute;inset:22px;border:1.5px solid rgba(201,162,75,.5);z-index:4;pointer-events:none;}
+  .frame::after{content:"";position:absolute;inset:5px;border:1px solid rgba(201,162,75,.22);}
+  .wm{position:absolute;right:-40px;top:50%;transform:translateY(-50%);width:400px;height:400px;opacity:.06;z-index:1;}
+  .inner{position:absolute;left:84px;top:0;height:100%;display:flex;flex-direction:column;justify-content:center;z-index:3;width:640px;}
+  .idx{font-size:22px;letter-spacing:.4em;text-indent:.4em;color:#c9a24b;margin-bottom:20px;}
+  .ttl{font-size:60px;line-height:1.14;letter-spacing:.05em;color:#8bb4e8;
+    -webkit-text-stroke:1px currentColor;text-wrap:balance;}
+  .accent{width:150px;height:5px;background:#b23a2e;margin:24px 0 20px;}
+  .sub{font-size:23px;line-height:1.6;color:#e7dfce;font-weight:normal;letter-spacing:.03em;max-width:20em;}
+  .art{position:absolute;right:92px;top:50%;transform:translateY(-50%);width:300px;height:300px;z-index:2;}
+  .art svg{width:100%;height:100%;display:block;overflow:visible;}
+  .band::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(120% 90% at 20% 50%,rgba(0,0,0,0) 45%,rgba(0,0,0,.5) 100%);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const G="#c9a24b", I="#8bb4e8", V="#c0453a", INK="#e7dfce";
+function kikyo(c){let p="";for(let i=0;i<5;i++)p+=`<path d="M100,98 C84,64 86,40 100,15 C114,40 116,64 100,98 Z" fill="${c}" transform="rotate(${i*72} 100 100)"/>`;
+  return `<svg viewBox="0 0 200 200">${p}<circle cx="100" cy="100" r="12" fill="none" stroke="${c}" stroke-width="4"/></svg>`;}
+
+const motif={
+  // 誤算の11日間: 砂時計
+  sunadokei:`<svg viewBox="0 0 200 200" fill="none" stroke="${G}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+    <line x1="62" y1="40" x2="138" y2="40"/><line x1="62" y1="170" x2="138" y2="170"/>
+    <path d="M70,44 L130,44 L100,104 Z"/>
+    <path d="M100,104 L70,166 L130,166 Z"/>
+    <!-- sand -->
+    <path d="M84,44 L116,44 L100,76 Z" fill="${G}" fill-opacity=".45" stroke="none"/>
+    <path d="M78,166 L122,166 L100,132 Z" fill="${G}" fill-opacity=".45" stroke="none"/>
+    <line x1="100" y1="104" x2="100" y2="150" stroke="${G}" stroke-width="2"/>
+  </svg>`,
+  // 山崎の敗戦: 天王山と折れた旗
+  yamazaki:`<svg viewBox="0 0 200 200" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M20,172 L74,92 L104,132 L140,80 L182,172 Z" stroke="${I}" stroke-width="2.6" fill="${I}" fill-opacity=".08"/>
+    <!-- broken flag pole leaning -->
+    <line x1="120" y1="176" x2="150" y2="70" stroke="${G}" stroke-width="3"/>
+    <path d="M150,70 L150,40" stroke="${G}" stroke-width="3" transform="rotate(18 150 70)"/>
+    <path d="M150,44 q22,4 34,-6 l-4,20 q-16,8 -30,4 z" fill="${V}" fill-opacity=".55" stroke="${V}" stroke-width="2" transform="rotate(18 150 70)"/>
+  </svg>`,
+  // 一族の最期・大奥への遺産: 散る桔梗(花弁が落ちる)
+  chirukikyo:`<svg viewBox="0 0 200 200">
+    <g transform="translate(0,-10)">
+      <path d="M100,96 C86,66 88,44 100,22 C112,44 114,66 100,96 Z" fill="${G}" fill-opacity=".85" transform="rotate(0 100 90)"/>
+      <path d="M100,96 C86,66 88,44 100,22 C112,44 114,66 100,96 Z" fill="${G}" fill-opacity=".7" transform="rotate(72 100 90)"/>
+      <path d="M100,96 C86,66 88,44 100,22 C112,44 114,66 100,96 Z" fill="${G}" fill-opacity=".7" transform="rotate(-72 100 90)"/>
+      <circle cx="100" cy="90" r="10" fill="none" stroke="${G}" stroke-width="3"/>
+    </g>
+    <!-- falling petals -->
+    <path d="M60,150 C53,138 55,128 62,120 C66,130 66,142 60,150 Z" fill="${G}" fill-opacity=".5" transform="rotate(30 60 135)"/>
+    <path d="M132,168 C125,156 127,146 134,138 C138,148 138,160 132,168 Z" fill="${G}" fill-opacity=".38" transform="rotate(-24 132 152)"/>
+    <path d="M96,182 C89,170 91,160 98,152 C102,162 102,174 96,182 Z" fill="${G}" fill-opacity=".25" transform="rotate(14 96 166)"/>
+  </svg>`,
+  // 天海説: 網代笠と錫杖(+俗説の?)
+  tenkai:`<svg viewBox="0 0 200 200" fill="none" stroke="${G}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- monk hat -->
+    <path d="M52,120 Q100,60 148,120 Z" fill="${G}" fill-opacity=".14"/>
+    <line x1="46" y1="120" x2="154" y2="120"/>
+    <line x1="100" y1="66" x2="100" y2="56"/>
+    <!-- staff (shakujo) -->
+    <line x1="150" y1="150" x2="150" y2="60" stroke="${I}" stroke-width="3"/>
+    <path d="M150,60 a12,14 0 1 0 0.1,0 Z" stroke="${I}" stroke-width="2.4" fill="none"/>
+    <g stroke="${I}" stroke-width="1.8"><line x1="142" y1="50" x2="142" y2="42"/><line x1="150" y1="48" x2="150" y2="40"/><line x1="158" y1="50" x2="158" y2="42"/></g>
+    <text x="60" y="176" fill="${V}" font-family="serif" font-size="42" text-anchor="middle" font-weight="bold">?</text>
+  </svg>`,
+  // ガラシャ: 十字架と光
+  garasha:`<svg viewBox="0 0 200 200">
+    <g stroke="${G}" stroke-width="2" opacity=".35">
+      <line x1="100" y1="16" x2="100" y2="40"/><line x1="60" y1="30" x2="74" y2="50"/><line x1="140" y1="30" x2="126" y2="50"/>
+      <line x1="40" y1="70" x2="62" y2="80"/><line x1="160" y1="70" x2="138" y2="80"/></g>
+    <circle cx="100" cy="100" r="52" fill="${I}" fill-opacity=".08" stroke="none"/>
+    <g fill="${G}">
+      <rect x="92" y="46" width="16" height="120" rx="4"/>
+      <rect x="62" y="84" width="76" height="16" rx="4"/></g>
+  </svg>`,
+  // 血脈: 家系図(分岐して現代へ)
+  keimyaku:`<svg viewBox="0 0 200 200" fill="none" stroke="${G}" stroke-width="2.6" stroke-linecap="round">
+    <circle cx="100" cy="34" r="7" fill="${G}"/>
+    <line x1="100" y1="41" x2="100" y2="66"/>
+    <path d="M56,66 H144"/>
+    <line x1="56" y1="66" x2="56" y2="92"/><line x1="144" y1="66" x2="144" y2="92"/>
+    <circle cx="56" cy="98" r="6" fill="none"/><circle cx="144" cy="98" r="6" fill="none"/>
+    <line x1="144" y1="104" x2="144" y2="126"/>
+    <path d="M104,126 H176" transform="translate(-32,0)"/>
+    <line x1="112" y1="126" x2="112" y2="150"/><line x1="144" y1="126" x2="144" y2="150"/>
+    <circle cx="112" cy="156" r="6" fill="none"/>
+    <line x1="144" y1="150" x2="144" y2="164"/>
+    <circle cx="144" cy="172" r="9" fill="${G}"/>
+    <circle cx="144" cy="172" r="15" fill="none" stroke="${G}" stroke-width="1.5" opacity=".5"/>
+  </svg>`,
+};
+
+const data=[
+  {idx:"其の一",ttl:"誤算の十一日間",sub:"天下を取った男に許された時間は、わずか11日だった。",art:"sunadokei"},
+  {idx:"其の二",ttl:"山崎の敗戦",sub:"天王山の天下分け目は、わずか三時間で決した。",art:"yamazaki"},
+  {idx:"其の三",ttl:"一族の最期、大奥への遺産",sub:"明智は滅んだ。だが血の一滴が、思わぬ場所へ流れ込む。",art:"chirukikyo"},
+  {idx:"其の四",ttl:"天海になった?",sub:"光秀は生きて僧・天海になった──愛すべき俗説の真偽。",art:"tenkai"},
+  {idx:"其の五",ttl:"ガラシャの選択",sub:"細川ガラシャ。幽閉された娘が選んだ、壮絶な最期。",art:"garasha"},
+  {idx:"其の六",ttl:"血脈は、いまへ",sub:"明智の血は、現代の総理大臣にまで続いていた。",art:"keimyaku"},
+];
+
+const root=document.getElementById('root');
+data.forEach((d,i)=>{
+  const el=document.createElement('div');
+  el.className='band';el.id='b'+i;
+  el.innerHTML=`
+    <div class="wm">${kikyo(I)}</div>
+    <div class="frame"></div>
+    <div class="inner">
+      <div class="idx">${d.idx}</div>
+      <div class="ttl">${d.ttl}</div>
+      <div class="accent"></div>
+      <div class="sub">${d.sub}</div>
+    </div>
+    <div class="art">${motif[d.art]}</div>`;
+  root.appendChild(el);
+});
+</script>
+</body>
+</html>
