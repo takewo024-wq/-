@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# app database (server-side shared store)
+/data/app.db
+/data/app.db-*

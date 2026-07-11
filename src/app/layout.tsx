@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI社員の会社",
-  description: "AI社員とチャットしながら会社を運営するアプリ",
+  title: "個別支援計画管理",
+  description: "支援計画・支援日誌・評価を職員間で共有して管理するアプリ",
 };
 
 export default function RootLayout({

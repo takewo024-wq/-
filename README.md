@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 個別支援計画管理（共有版）
 
-## Getting Started
+支援計画・支援日誌・評価を、**職員間で共有して**管理するためのWebアプリです。
 
-First, run the development server:
+もともとはブラウザ内（localStorage）にだけ保存する単体HTMLでしたが、データをサーバー側の
+SQLite に保存するよう変更し、同じサーバーにアクセスする全員が同じデータを見られるようにしました。
+
+## 主な機能
+
+- 利用者の登録・編集
+- 支援目標（長期／短期・手立て・達成度）の管理
+- 支援日誌の記録（音声入力対応・目標への評価）
+- 有効支援のピックアップ一覧（印刷可）
+- 振り返り・評価、次期計画策定
+- データのエクスポート／インポート（JSON）
+
+## 仕組み
+
+- 画面（UI/ロジック）は元の単体HTMLをそのまま利用しています。
+  - マークアップ: `src/lib/ispMarkup.ts`（自動生成）
+  - スタイル: `src/app/isp.css`
+  - 挙動: `public/isp-app.js`（自動生成。保存先だけをサーバーAPIに変更）
+- 保存は Next.js の API 経由でサーバーの SQLite に行います。
+  - `GET /api/data` … 全データ取得
+  - `POST /api/data` … 変更（追加・更新・削除）を差分で反映
+  - 実装: `src/lib/db.ts`（Node.js 組み込みの `node:sqlite` を使用）
+- 各ブラウザは 8 秒ごとにサーバーを確認し、他の職員の更新を自動で取り込みます。
+- 保存は「変更したレコードだけ」を送るため、複数人が別々の利用者を同時に編集しても
+  互いの記録を消してしまいにくい設計です（同じ1件を同時編集した場合は後勝ちになります）。
+
+## 起動方法
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run build
+npm start        # http://localhost:3000 で起動
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開発時は `npm run dev` を使います。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+同じネットワーク内の職員は、このサーバーの URL（例: `http://<サーバーのIP>:3000`）に
+アクセスすれば同じデータを共有できます。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## データについて
 
-## Learn More
+- データベースは初回起動時に自動作成され、`data/app.db` に保存されます（Git 管理外）。
+- 初回のみ、`data/seed.json` の初期データ（手書き記録から取り込んだ利用者・日誌など）が投入されます。
+- バックアップは `data/app.db` をコピーするか、アプリ左下の「エクスポート」で JSON 保存してください。
 
-To learn more about Next.js, take a look at the following resources:
+> メモ: `node:sqlite` は Node.js 22 以降の組み込み機能を利用しています（起動時に experimental の
+> 警告が出ますが動作に問題はありません）。サーバーレス環境（Vercel 等）ではファイルが永続化されない
+> ため、常駐サーバー（自前サーバー・VPS など）での運用を想定しています。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## アセットの再生成
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+元の単体HTMLから `ispMarkup.ts` / `isp-app.js` / `isp.css` / `seed.json` を作り直すスクリプトを
+`scripts/` に置いています（通常は再実行不要です）。
