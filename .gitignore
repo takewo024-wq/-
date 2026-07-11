@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# 個別支援計画アプリのローカルデータ保存先（ファイル保存バックエンド）
+/data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
