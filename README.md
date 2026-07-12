@@ -2,6 +2,30 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Environment variables
+
+Create `.env.local` with:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+NOTE_SESSION_COOKIE=note_gql_auth_token=...; _note_session_v5=...
+```
+
+`NOTE_SESSION_COOKIE` is used by the 下書き管理 (`/drafts`) page to post drafts to
+note.com as note drafts (not published). note.com has no official API, so this
+uses the unofficial [`note-api-client`](https://www.npmjs.com/package/note-api-client)
+package driven by your logged-in browser session cookie. To obtain it:
+
+1. Log in to note.com in your browser.
+2. Open DevTools → Network (or Application → Cookies) for note.com.
+3. Copy the full `Cookie` request header value (or combine the
+   `note_gql_auth_token` and `_note_session_v5` cookies as `name=value; name=value`).
+4. Paste it as `NOTE_SESSION_COOKIE`.
+
+This is an unofficial, reverse-engineered integration. note.com can change or
+block it at any time, and using it may be against note's Terms of Service —
+use at your own risk, and treat the cookie value as a secret (never commit it).
+
 First, run the development server:
 
 ```bash
