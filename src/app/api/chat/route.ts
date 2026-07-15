@@ -23,7 +23,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const body: ChatRequestBody = await req.json();
+  let body: ChatRequestBody;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "リクエストの形式が不正です。" }, { status: 400 });
+  }
+
   const employee = employees[body.employeeId];
   if (!employee) {
     return NextResponse.json({ error: "不明な社員IDです。" }, { status: 400 });
@@ -32,6 +38,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "メッセージがありません。" }, { status: 400 });
   }
 
+  // The Messages API requires the conversation to start on a "user" turn;
+  // the client's thread starts with a display-only assistant greeting.
+  const firstUserIndex = body.messages.findIndex((m) => m.role === "user");
+  if (firstUserIndex === -1) {
+    return NextResponse.json({ error: "メッセージがありません。" }, { status: 400 });
+  }
+  const apiMessages = body.messages.slice(firstUserIndex);
+
   const client = new Anthropic({ apiKey });
 
   try {
@@ -39,7 +53,7 @@ export async function POST(req: NextRequest) {
       model: "claude-opus-4-8",
       max_tokens: 2048,
       system: employee.systemPrompt,
-      messages: body.messages.map((m) => ({ role: m.role, content: m.content })),
+      messages: apiMessages.map((m) => ({ role: m.role, content: m.content })),
       ...(employee.webSearch
         ? { tools: [{ type: "web_search_20260209" as const, name: "web_search" as const }] }
         : {}),

@@ -9,49 +9,74 @@ interface ChatMessage {
 }
 
 type Threads = Record<EmployeeId, ChatMessage[]>;
+type LoadingMap = Record<EmployeeId, boolean>;
+type ErrorMap = Record<EmployeeId, string | null>;
+type InputMap = Record<EmployeeId, string>;
 
 const initialThreads: Threads = employeeList.reduce((acc, e) => {
   acc[e.id] = [{ role: "assistant", content: e.greeting }];
   return acc;
 }, {} as Threads);
 
+const initialLoading: LoadingMap = employeeList.reduce((acc, e) => {
+  acc[e.id] = false;
+  return acc;
+}, {} as LoadingMap);
+
+const initialErrors: ErrorMap = employeeList.reduce((acc, e) => {
+  acc[e.id] = null;
+  return acc;
+}, {} as ErrorMap);
+
+const initialInputs: InputMap = employeeList.reduce((acc, e) => {
+  acc[e.id] = "";
+  return acc;
+}, {} as InputMap);
+
 export default function Home() {
   const [activeId, setActiveId] = useState<EmployeeId>(employeeList[0].id);
   const [threads, setThreads] = useState<Threads>(initialThreads);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [inputs, setInputs] = useState<InputMap>(initialInputs);
+  const [loadingMap, setLoadingMap] = useState<LoadingMap>(initialLoading);
+  const [errorMap, setErrorMap] = useState<ErrorMap>(initialErrors);
 
   const activeEmployee = employees[activeId];
   const messages = threads[activeId];
+  const input = inputs[activeId];
+  const loading = loadingMap[activeId];
+  const error = errorMap[activeId];
 
   async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading) return;
+    const employeeId = activeId;
+    const text = inputs[employeeId].trim();
+    if (!text || loadingMap[employeeId]) return;
 
-    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: text }];
-    setThreads((prev) => ({ ...prev, [activeId]: nextMessages }));
-    setInput("");
-    setLoading(true);
-    setError(null);
+    const nextMessages: ChatMessage[] = [...threads[employeeId], { role: "user", content: text }];
+    setThreads((prev) => ({ ...prev, [employeeId]: nextMessages }));
+    setInputs((prev) => ({ ...prev, [employeeId]: "" }));
+    setLoadingMap((prev) => ({ ...prev, [employeeId]: true }));
+    setErrorMap((prev) => ({ ...prev, [employeeId]: null }));
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeId: activeId, messages: nextMessages }),
+        body: JSON.stringify({ employeeId, messages: nextMessages }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "エラーが発生しました。");
 
       setThreads((prev) => ({
         ...prev,
-        [activeId]: [...prev[activeId], { role: "assistant", content: data.reply }],
+        [employeeId]: [...prev[employeeId], { role: "assistant", content: data.reply }],
       }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "エラーが発生しました。");
+      setErrorMap((prev) => ({
+        ...prev,
+        [employeeId]: e instanceof Error ? e.message : "エラーが発生しました。",
+      }));
     } finally {
-      setLoading(false);
+      setLoadingMap((prev) => ({ ...prev, [employeeId]: false }));
     }
   }
 
@@ -125,7 +150,7 @@ export default function Home() {
         >
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInputs((prev) => ({ ...prev, [activeId]: e.target.value }))}
             placeholder={`${activeEmployee.name}にメッセージを送る...`}
             className="flex-1 rounded-lg border border-black/10 dark:border-white/20 bg-transparent px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
