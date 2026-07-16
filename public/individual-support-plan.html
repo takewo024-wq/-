@@ -104,12 +104,13 @@ body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; font-size: 15px; back
 .review-item-edit .form-group:last-child { margin-bottom: 0; }
 .review-item-edit label { font-size: 11px; }
 .review-item-edit textarea { min-height: 50px; font-size: 12px; }
-.review-item-card { border: 1px solid #eee; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+.review-item-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
 .review-item-card:last-child { margin-bottom: 0; }
-.review-item-head { font-size: 13px; font-weight: 700; color: #2c2c2a; margin-bottom: 8px; line-height: 1.5; }
-.review-item-row { display: grid; grid-template-columns: 108px 1fr; gap: 10px; font-size: 12px; line-height: 1.6; margin-top: 6px; }
-.review-item-row:first-of-type { margin-top: 0; }
-.review-item-label { flex-shrink: 0; font-weight: 600; color: #888; }
+.review-item-head { font-size: 13px; font-weight: 700; color: #2c2c2a; padding-bottom: 8px; margin-bottom: 4px; line-height: 1.5; border-bottom: 1px solid #e5e5e0; }
+.review-item-row { display: grid; grid-template-columns: 108px 1fr; gap: 10px; font-size: 12px; line-height: 1.6; padding: 8px 0; border-top: 1px solid #eee; }
+.review-item-row:first-of-type { padding-top: 8px; }
+.review-item-card > .review-item-row:first-child { border-top: none; padding-top: 0; }
+.review-item-label { flex-shrink: 0; font-weight: 600; color: #888; padding-right: 8px; border-right: 1px solid #eee; }
 .review-item-value { color: #444; white-space: pre-wrap; }
 
 /* モーダル */
