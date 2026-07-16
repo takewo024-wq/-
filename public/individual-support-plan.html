@@ -1,0 +1,2636 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>個別支援計画管理</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; font-size: 15px; background: #f5f5f0; color: #2c2c2a; }
+.app { display: flex; height: 100vh; }
+
+/* サイドバー */
+.sidebar { width: 220px; background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-header { padding: 16px; border-bottom: 1px solid #eee; }
+.sidebar-header h1 { font-size: 14px; font-weight: 600; color: #444; }
+.sidebar-header p { font-size: 11px; color: #888; margin-top: 2px; }
+.sidebar-menu { flex: 1; overflow-y: auto; padding: 8px 0; }
+.menu-section { padding: 8px 16px 4px; font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+.menu-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; color: #555; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; }
+.menu-item:hover { background: #f5f5f0; }
+.menu-item.active { background: #e8f0fe; color: #1a56db; font-weight: 500; }
+.menu-item .badge { margin-left: auto; background: #e8f0fe; color: #1a56db; border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+.sidebar-footer { padding: 12px 16px; border-top: 1px solid #eee; }
+
+/* メインコンテンツ */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: #fff; border-bottom: 1px solid #eee; }
+.topbar h2 { font-size: 16px; font-weight: 600; }
+.topbar-actions { display: flex; gap: 8px; }
+.btn { padding: 7px 16px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; color: #444; transition: background 0.1s; }
+.btn:hover { background: #f5f5f0; }
+.btn.primary { background: #1a56db; color: #fff; border-color: #1a56db; }
+.btn.primary:hover { background: #1648c0; }
+.btn.danger { background: #fff; color: #c0392b; border-color: #f5c6cb; }
+.btn.danger:hover { background: #fff5f5; }
+
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* カード */
+.card { background: #fff; border-radius: 10px; border: 1px solid #e8e8e8; margin-bottom: 16px; }
+.card-header { padding: 14px 18px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+.card-header h3 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 18px; }
+
+/* フォーム */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+.form-row.single { grid-template-columns: 1fr; }
+.form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; color: #333; background: #fff;
+}
+.form-group textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #1a56db; box-shadow: 0 0 0 2px rgba(26,86,219,0.1); }
+
+/* 利用者一覧 */
+.user-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.user-card { background: #fff; border-radius: 8px; border: 1px solid #e8e8e8; padding: 14px; cursor: pointer; transition: border-color 0.1s, box-shadow 0.1s; }
+.user-card:hover { border-color: #1a56db; box-shadow: 0 2px 8px rgba(26,86,219,0.1); }
+.user-card.selected { border-color: #1a56db; background: #f0f4ff; }
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e8f0fe; color: #1a56db; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; margin-bottom: 8px; }
+.user-name { font-size: 14px; font-weight: 600; }
+.user-meta { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* 日誌一覧 */
+.diary-list { display: flex; flex-direction: column; gap: 8px; }
+.diary-item { background: #fff; border-radius: 8px; border: 1px solid #e8e8e8; padding: 14px; cursor: pointer; }
+.diary-item:hover { border-color: #bbb; }
+.diary-date { font-size: 12px; font-weight: 600; color: #1a56db; margin-bottom: 4px; }
+.diary-summary { font-size: 13px; color: #444; }
+.diary-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f0f4ff; color: #1a56db; }
+.tag.green { background: #f0fdf4; color: #166534; }
+.tag.amber { background: #fffbeb; color: #92400e; }
+.tag.red { background: #fff5f5; color: #991b1b; }
+
+/* 評価バッジ */
+.rating { display: inline-flex; gap: 3px; }
+.rating-dot { width: 10px; height: 10px; border-radius: 50%; background: #e0e0e0; }
+.rating-dot.filled { background: #1a56db; }
+.rating-dot.filled.green { background: #16a34a; }
+.rating-dot.filled.amber { background: #d97706; }
+
+/* 目標一覧 */
+.goal-item { background: #fff; border-radius: 8px; border: 1px solid #e8e8e8; padding: 14px; margin-bottom: 10px; }
+.goal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.goal-title { font-size: 13px; font-weight: 600; }
+.goal-detail { font-size: 12px; color: #666; margin-top: 4px; line-height: 1.5; }
+.goal-period { font-size: 11px; color: #888; margin-top: 6px; }
+.progress-bar-bg { background: #eee; border-radius: 4px; height: 6px; margin-top: 8px; }
+.progress-bar { background: #1a56db; border-radius: 4px; height: 6px; transition: width 0.3s; }
+
+/* 短期目標の具体的項目（①②③…）を分けて表示 */
+.support-items { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.support-item { display: flex; align-items: flex-start; gap: 8px; background: #f8f8f5; border-radius: 8px; padding: 8px 10px; }
+.support-item-num { flex-shrink: 0; font-weight: 700; color: #1a56db; font-size: 13px; line-height: 1.5; }
+.support-item-body { font-size: 12px; color: #555; line-height: 1.6; white-space: pre-wrap; }
+.support-plain { font-size: 12px; color: #666; line-height: 1.6; white-space: pre-wrap; margin-top: 4px; }
+
+/* モーダル */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 680px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 24px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; }
+
+/* 振り返りセクション */
+.review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.review-stat { background: #f8f8f5; border-radius: 8px; padding: 14px; text-align: center; }
+.review-stat .num { font-size: 28px; font-weight: 700; color: #1a56db; }
+.review-stat .label { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* 空状態 */
+.empty-state { text-align: center; padding: 60px 20px; color: #999; }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* 検索バー */
+.search-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.search-bar input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.search-bar input:focus { outline: none; border-color: #1a56db; }
+
+/* 評価フォーム */
+.rating-selector { display: flex; gap: 8px; }
+.rating-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 12px; color: #555; }
+.rating-btn:hover { background: #f0f0f0; }
+.rating-btn.active-good { background: #f0fdf4; border-color: #16a34a; color: #166534; }
+.rating-btn.active-mid { background: #fffbeb; border-color: #d97706; color: #92400e; }
+.rating-btn.active-bad { background: #fff5f5; border-color: #dc2626; color: #991b1b; }
+
+/* タブ */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #666; }
+.tab:hover { color: #333; }
+.tab.active { color: #1a56db; border-bottom-color: #1a56db; font-weight: 500; }
+
+/* ナビゲーションブレッドクラム */
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; margin-bottom: 16px; }
+.breadcrumb a { color: #1a56db; cursor: pointer; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+/* 日付バッジ */
+.date-badge { display: inline-block; background: #f0f4ff; color: #1a56db; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; }
+
+/* スクロールバー */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+/* ピックアップボタン */
+.pickup-btn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 11px; color: #888; }
+.pickup-btn:hover { border-color: #f59e0b; color: #d97706; background: #fffbeb; }
+.pickup-btn.on { border-color: #f59e0b; background: #fffbeb; color: #92400e; font-weight: 600; }
+
+/* ピックアップ一覧テーブル */
+.pickup-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pickup-table th { background: #f8f8f5; font-weight: 600; color: #555; padding: 10px 14px; text-align: left; border-bottom: 2px solid #e0e0e0; }
+.pickup-table td { padding: 10px 14px; border-bottom: 1px solid #eee; vertical-align: top; line-height: 1.6; }
+.pickup-table tr:hover td { background: #fffbeb; }
+.pickup-category { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+
+/* 音声入力ボタン */
+.has-voice { display: flex; flex-wrap: wrap; gap: 6px; }
+.has-voice label { width: 100%; margin-bottom: 0; }
+.has-voice textarea { flex: 1; min-width: 0; }
+.voice-btn {
+  flex-shrink: 0; align-self: flex-start;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid #ddd; background: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: background 0.15s, border-color 0.15s;
+}
+.voice-btn:hover { background: #f0f4ff; border-color: #1a56db; }
+.voice-btn.recording { background: #fee2e2; border-color: #dc2626; animation: pulse 0.8s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.4)} 50%{box-shadow:0 0 0 6px rgba(220,38,38,0)} }
+
+/* 印刷 */
+@media print {
+  .sidebar, .topbar-actions, .btn, .modal-overlay { display: none !important; }
+  .main { overflow: visible; }
+  .content { overflow: visible; }
+  .pickup-btn { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- サイドバー -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>個別支援管理</h1>
+      <p>支援計画・日誌・評価</p>
+    </div>
+    <div class="sidebar-menu">
+      <div class="menu-section">メニュー</div>
+      <button class="menu-item active" onclick="showPage('users')">👥 利用者一覧</button>
+      <button class="menu-item" onclick="showPage('goals')" id="menu-goals">🎯 支援目標</button>
+      <button class="menu-item" onclick="showPage('diary')" id="menu-diary">📝 支援日誌</button>
+      <button class="menu-item" onclick="showPage('pickup')" id="menu-pickup">⭐ 有効支援ピックアップ</button>
+      <button class="menu-item" onclick="showPage('review')" id="menu-review">📊 振り返り・評価</button>
+      <button class="menu-item" onclick="showPage('nextplan')" id="menu-nextplan">📋 次期計画策定</button>
+    </div>
+    <div class="sidebar-footer" style="font-size:11px; color:#aaa;">
+      データはブラウザに保存されます<br>
+      <button class="btn" style="margin-top:8px;font-size:11px;padding:4px 8px;width:100%" onclick="exportData()">📤 エクスポート</button>
+      <button class="btn" style="margin-top:4px;font-size:11px;padding:4px 8px;width:100%" onclick="document.getElementById('import-input').click()">📥 インポート</button>
+      <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="page-title">利用者一覧</h2>
+      <div class="topbar-actions" id="topbar-actions">
+        <button class="btn primary" onclick="openAddUserModal()">＋ 利用者追加</button>
+      </div>
+    </div>
+    <div class="content" id="main-content">
+      <!-- JS で描画 -->
+    </div>
+  </div>
+</div>
+
+<!-- 利用者追加/編集モーダル -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">利用者追加</h3>
+      <button class="btn" onclick="closeModal('user-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>氏名 *</label><input type="text" id="u-name" placeholder="例: 山田 太郎"></div>
+      <div class="form-group"><label>ふりがな</label><input type="text" id="u-kana" placeholder="やまだ たろう"></div>
+    </div>
+    <div class="form-row triple">
+      <div class="form-group"><label>生年月日</label><input type="date" id="u-birth"></div>
+      <div class="form-group"><label>性別</label>
+        <select id="u-gender"><option value="">—</option><option>男性</option><option>女性</option><option>その他</option></select>
+      </div>
+      <div class="form-group"><label>障害支援区分</label>
+        <select id="u-level"><option value="">—</option><option>区分1</option><option>区分2</option><option>区分3</option><option>区分4</option><option>区分5</option><option>区分6</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>サービス種別</label>
+        <select id="u-service"><option value="">—</option><option>生活介護</option><option>就労継続支援A型</option><option>就労継続支援B型</option><option>就労移行支援</option><option>共同生活援助</option><option>施設入所支援</option><option>放課後等デイサービス</option><option>その他</option></select>
+      </div>
+      <div class="form-group"><label>相談支援事業所</label><input type="text" id="u-office" placeholder="事業所名"></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>備考・特記事項</label><textarea id="u-memo" placeholder="医療的ケア・コミュニケーション方法など"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('user-modal')">キャンセル</button>
+      <button class="btn primary" onclick="saveUser()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 支援日誌 追加/編集モーダル -->
+<div class="modal-overlay" id="diary-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="diary-modal-title">支援日誌 記録</h3>
+      <button class="btn" onclick="closeModal('diary-modal')">✕</button>
+    </div>
+    <div class="form-row triple">
+      <div class="form-group"><label>日付 *</label><input type="date" id="d-date"></div>
+      <div class="form-group"><label>対応者</label><input type="text" id="d-staff" placeholder="担当職員名"></div>
+      <div class="form-group"><label>参加状況</label>
+        <select id="d-attend"><option>参加</option><option>欠席</option><option>早退</option><option>遅刻</option></select>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>関連する目標</label>
+        <select id="d-goal"><option value="">— 目標を選択（任意）—</option></select>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group has-voice">
+        <label>支援内容・活動</label>
+        <textarea id="d-content" placeholder="本日の支援内容・活動内容を記録してください"></textarea>
+        <button type="button" class="voice-btn" title="音声入力" onclick="toggleVoice('d-content',this)">🎤</button>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group has-voice">
+        <label>本人の様子・反応</label>
+        <textarea id="d-condition" placeholder="体調・気分・言動・反応など"></textarea>
+        <button type="button" class="voice-btn" title="音声入力" onclick="toggleVoice('d-condition',this)">🎤</button>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group has-voice">
+        <label>申し送り・次回への課題</label>
+        <textarea id="d-note" placeholder="次の支援に向けた引き継ぎ事項"></textarea>
+        <button type="button" class="voice-btn" title="音声入力" onclick="toggleVoice('d-note',this)">🎤</button>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>目標への取り組み評価</label>
+        <div class="rating-selector" id="d-rating-sel">
+          <button class="rating-btn" data-val="good" onclick="setRating('good')">✓ 良好</button>
+          <button class="rating-btn" data-val="mid" onclick="setRating('mid')">△ 普通</button>
+          <button class="rating-btn" data-val="bad" onclick="setRating('bad')">✗ 要支援</button>
+          <button class="rating-btn" data-val="" onclick="setRating('')">— 未記入</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn danger" id="diary-delete-btn" onclick="deleteDiary()" style="display:none">削除</button>
+      <button class="btn" onclick="closeModal('diary-modal')">キャンセル</button>
+      <button class="btn primary" onclick="saveDiary()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 支援目標 追加/編集モーダル -->
+<div class="modal-overlay" id="goal-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="goal-modal-title">支援目標 設定</h3>
+      <button class="btn" onclick="closeModal('goal-modal')">✕</button>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>長期目標</label><textarea id="g-long" placeholder="半年〜1年間で達成を目指す目標"></textarea></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>長期目標の手立て</label><textarea id="g-long-support" placeholder="長期目標達成に向けた支援内容・方法"></textarea></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>短期目標 *</label><textarea id="g-short" placeholder="今期（3〜6ヶ月）で取り組む具体的な目標"></textarea></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>短期目標の手立て</label><textarea id="g-support" placeholder="短期目標達成に向けた具体的な支援内容・方法"></textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>計画開始日</label><input type="date" id="g-start"></div>
+      <div class="form-group"><label>計画終了日</label><input type="date" id="g-end"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>担当職員</label><input type="text" id="g-staff" placeholder="担当者名"></div>
+      <div class="form-group"><label>達成度（0〜100%）</label><input type="number" id="g-progress" min="0" max="100" value="0" placeholder="0"></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>備考</label><textarea id="g-memo" placeholder="その他、特記事項"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn danger" id="goal-delete-btn" onclick="deleteGoal()" style="display:none">削除</button>
+      <button class="btn" onclick="closeModal('goal-modal')">キャンセル</button>
+      <button class="btn primary" onclick="saveGoal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 振り返り記録モーダル -->
+<div class="modal-overlay" id="review-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>振り返り・評価記録</h3>
+      <button class="btn" onclick="closeModal('review-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>評価日</label><input type="date" id="rv-date"></div>
+      <div class="form-group"><label>評価期間</label><input type="text" id="rv-period" placeholder="例: 2025年4月〜6月"></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>目標達成状況（本人評価）</label><textarea id="rv-self" placeholder="本人が感じている達成感・変化など"></textarea></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>目標達成状況（職員評価）</label><textarea id="rv-staff" placeholder="職員から見た達成状況・成長した点"></textarea></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>次期計画への引き継ぎ・課題</label><textarea id="rv-next" placeholder="次期の支援計画に向けた課題・継続事項"></textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>総合評価</label>
+        <select id="rv-overall">
+          <option value="">—</option>
+          <option value="A">A: 目標達成</option>
+          <option value="B">B: おおむね達成</option>
+          <option value="C">C: 一部達成</option>
+          <option value="D">D: 未達成</option>
+          <option value="E">E: 継続検討</option>
+        </select>
+      </div>
+      <div class="form-group"><label>評価者</label><input type="text" id="rv-evaluator" placeholder="職員名"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn danger" id="review-delete-btn" onclick="deleteReview()" style="display:none">削除</button>
+      <button class="btn" onclick="closeModal('review-modal')">キャンセル</button>
+      <button class="btn primary" onclick="saveReview()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== データ管理 =====================
+let _memStore = {}; // localStorageが使えない環境用のフォールバック（その場のみ保持）
+let _storageOK = true;
+
+function _read(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return JSON.parse(raw || '[]');
+  } catch (e) {
+    return JSON.parse(_memStore[key] || '[]');
+  }
+}
+function _write(key, v) {
+  const json = JSON.stringify(v);
+  try {
+    localStorage.setItem(key, json);
+    _memStore[key] = json;
+  } catch (e) {
+    _memStore[key] = json; // 最低限その場では保持
+    if (_storageOK) {
+      _storageOK = false;
+      alert('⚠ データをブラウザに保存できませんでした。\n\n' +
+        'この画面の入力は一時的に保持されますが、ページを閉じると消えます。\n\n' +
+        '【考えられる原因】\n' +
+        '・プライベート/シークレットウィンドウで開いている\n' +
+        '・ブラウザでサイトデータ(Cookie)がブロックされている\n' +
+        '・ファイルを直接開いた状態でブラウザが保存を許可していない\n\n' +
+        '通常のウィンドウで開き、サイトデータを許可してください。');
+    }
+  }
+}
+
+const DB = {
+  get users() { return _read('isp_users'); },
+  set users(v) { _write('isp_users', v); },
+  get diaries() { return _read('isp_diaries'); },
+  set diaries(v) { _write('isp_diaries', v); },
+  get goals() { return _read('isp_goals'); },
+  set goals(v) { _write('isp_goals', v); },
+  get reviews() { return _read('isp_reviews'); },
+  set reviews(v) { _write('isp_reviews', v); },
+};
+
+let currentPage = 'users';
+let selectedUserId = null;
+let editingId = null;
+let diaryRating = '';
+
+// ===================== ページ切替 =====================
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+  const menuMap = { users: 0, goals: 1, diary: 2, pickup: 3, review: 4, nextplan: 5 };
+  document.querySelectorAll('.menu-item')[menuMap[page]].classList.add('active');
+
+  const titles = { users: '利用者一覧', diary: '支援日誌', goals: '支援目標', review: '振り返り・評価', pickup: '有効支援ピックアップ', nextplan: '次期計画策定' };
+  document.getElementById('page-title').textContent = titles[page];
+
+  renderPage(page);
+}
+
+function renderPage(page) {
+  const c = document.getElementById('main-content');
+  const actions = document.getElementById('topbar-actions');
+  if (page === 'users') {
+    actions.innerHTML = `<button class="btn primary" onclick="openAddUserModal()">＋ 利用者追加</button>`;
+    renderUsers(c);
+  } else if (!selectedUserId) {
+    c.innerHTML = `<div class="empty-state"><div class="icon">👆</div><p>左の「利用者一覧」から対象者を選択してください</p></div>`;
+    actions.innerHTML = '';
+  } else if (page === 'diary') {
+    actions.innerHTML = `<button class="btn primary" onclick="openAddDiaryModal()">＋ 日誌追加</button>`;
+    renderDiary(c);
+  } else if (page === 'pickup') {
+    actions.innerHTML = `<button class="btn" onclick="window.print()">🖨 印刷</button>`;
+    renderPickup(c);
+  } else if (page === 'goals') {
+    actions.innerHTML = `<button class="btn primary" onclick="openAddGoalModal()">＋ 目標追加</button>`;
+    renderGoals(c);
+  } else if (page === 'review') {
+    actions.innerHTML = `<button class="btn primary" onclick="openAddReviewModal()">＋ 振り返り追加</button>`;
+    renderReview(c);
+  } else if (page === 'nextplan') {
+    actions.innerHTML = `<button class="btn" onclick="window.print()">🖨 印刷</button>`;
+    renderNextPlan(c);
+  }
+}
+
+// ===================== 利用者 =====================
+function renderUsers(c) {
+  const users = DB.users;
+  let search = '';
+  c.innerHTML = `
+    <div class="search-bar">
+      <input type="text" id="user-search" placeholder="🔍 氏名・サービス種別で検索..." oninput="filterUsers(this.value)">
+    </div>
+    <div class="user-grid" id="user-grid">${renderUserCards(users, selectedUserId)}</div>
+  `;
+}
+
+function renderUserCards(users, selectedId) {
+  if (!users.length) return `<div class="empty-state" style="grid-column:1/-1"><div class="icon">👥</div><p>利用者を追加してください</p></div>`;
+  return users.map(u => {
+    const initial = u.name ? u.name[0] : '?';
+    return `<div class="user-card ${u.id === selectedId ? 'selected' : ''}" onclick="selectUser('${u.id}')">
+      <div class="user-avatar">${initial}</div>
+      <div class="user-name">${esc(u.name)}</div>
+      <div class="user-meta">${esc(u.service || '—')} ${u.level ? '/ ' + esc(u.level) : ''}</div>
+      <div style="margin-top:8px; display:flex; gap:6px; justify-content:flex-end;">
+        <button class="btn" style="padding:3px 8px;font-size:11px" onclick="event.stopPropagation(); openEditUserModal('${u.id}')">編集</button>
+        <button class="btn danger" style="padding:3px 8px;font-size:11px" onclick="event.stopPropagation(); deleteUser('${u.id}')">削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterUsers(q) {
+  const users = DB.users.filter(u => !q || u.name.includes(q) || (u.service && u.service.includes(q)));
+  document.getElementById('user-grid').innerHTML = renderUserCards(users, selectedUserId);
+}
+
+function selectUser(id) {
+  selectedUserId = id;
+  renderPage(currentPage);
+}
+
+function openAddUserModal() { editingId = null; clearUserForm(); document.getElementById('user-modal-title').textContent = '利用者追加'; openModal('user-modal'); }
+function openEditUserModal(id) {
+  editingId = id;
+  const u = DB.users.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('user-modal-title').textContent = '利用者編集';
+  document.getElementById('u-name').value = u.name || '';
+  document.getElementById('u-kana').value = u.kana || '';
+  document.getElementById('u-birth').value = u.birth || '';
+  document.getElementById('u-gender').value = u.gender || '';
+  document.getElementById('u-level').value = u.level || '';
+  document.getElementById('u-service').value = u.service || '';
+  document.getElementById('u-office').value = u.office || '';
+  document.getElementById('u-memo').value = u.memo || '';
+  openModal('user-modal');
+}
+function clearUserForm() {
+  ['u-name','u-kana','u-birth','u-gender','u-level','u-service','u-office','u-memo'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+}
+function saveUser() {
+  const name = document.getElementById('u-name').value.trim();
+  if (!name) { alert('氏名を入力してください'); return; }
+  const users = DB.users;
+  const data = {
+    name, kana: v('u-kana'), birth: v('u-birth'), gender: v('u-gender'),
+    level: v('u-level'), service: v('u-service'), office: v('u-office'), memo: v('u-memo')
+  };
+  if (editingId) {
+    const i = users.findIndex(x => x.id === editingId);
+    if (i >= 0) users[i] = { ...users[i], ...data };
+  } else {
+    users.push({ id: uid(), ...data });
+  }
+  DB.users = users;
+  closeModal('user-modal');
+  renderPage(currentPage);
+}
+function deleteUser(id) {
+  if (!confirm('この利用者と関連する全データを削除しますか？')) return;
+  DB.users = DB.users.filter(u => u.id !== id);
+  DB.diaries = DB.diaries.filter(d => d.userId !== id);
+  DB.goals = DB.goals.filter(g => g.userId !== id);
+  DB.reviews = DB.reviews.filter(r => r.userId !== id);
+  if (selectedUserId === id) selectedUserId = null;
+  renderPage(currentPage);
+}
+
+// ===================== 支援日誌 =====================
+function renderDiary(c) {
+  const user = DB.users.find(u => u.id === selectedUserId);
+  const diaries = DB.diaries.filter(d => d.userId === selectedUserId).sort((a,b) => b.date.localeCompare(a.date));
+  c.innerHTML = `
+    <div class="breadcrumb"><a onclick="showPage('users')">利用者一覧</a> › <span>${esc(user?.name || '')}</span> › 支援日誌</div>
+    <div class="diary-list">${diaries.length ? diaries.map(renderDiaryItem).join('') : '<div class="empty-state"><div class="icon">📝</div><p>支援日誌がまだありません</p></div>'}</div>
+  `;
+}
+function renderDiaryItem(d) {
+  const ratingMap = { good: ['green','✓ 良好'], mid: ['amber','△ 普通'], bad: ['red','✗ 要支援'] };
+  const [tagClass, tagLabel] = ratingMap[d.rating] || ['',''];
+  const isPickup = !!d.pickup;
+  return `<div class="diary-item" onclick="openEditDiaryModal('${d.id}')">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="diary-date">${d.date}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="pickup-btn ${isPickup?'on':''}" onclick="event.stopPropagation();togglePickup('${d.id}')">${isPickup?'⭐ ピックアップ中':'☆ ピックアップ'}</button>
+        <div style="font-size:11px;color:#999">${esc(d.staff || '')} / ${esc(d.attend || '参加')}</div>
+      </div>
+    </div>
+    <div class="diary-summary">${esc(d.content || '').substring(0,80)}${(d.content||'').length>80?'…':''}</div>
+    ${d.condition ? `<div style="font-size:12px;color:#666;margin-top:4px">様子: ${esc(d.condition).substring(0,60)}</div>` : ''}
+    <div class="diary-tags">
+      ${tagLabel ? `<span class="tag ${tagClass}">${tagLabel}</span>` : ''}
+      ${d.note ? `<span class="tag">申し送りあり</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function togglePickup(id) {
+  const diaries = DB.diaries;
+  const i = diaries.findIndex(d => d.id === id);
+  if (i < 0) return;
+  diaries[i].pickup = !diaries[i].pickup;
+  diaries[i].pickupMemo = diaries[i].pickupMemo || '';
+  DB.diaries = diaries;
+  renderPage('diary');
+}
+function populateDiaryGoalSelect(selectedGoalId) {
+  const sel = document.getElementById('d-goal');
+  if (!sel) return;
+  const goals = DB.goals.filter(g => g.userId === selectedUserId);
+  sel.innerHTML = '<option value="">— 目標を選択（任意）—</option>' +
+    goals.map(g => `<option value="${g.id}"${g.id === selectedGoalId ? ' selected' : ''}>${esc(g.short.substring(0,30))}${g.short.length > 30 ? '…' : ''}</option>`).join('');
+}
+function openAddDiaryModal() {
+  editingId = null;
+  clearDiaryForm();
+  document.getElementById('diary-modal-title').textContent = '支援日誌 記録';
+  document.getElementById('diary-delete-btn').style.display = 'none';
+  document.getElementById('d-date').value = today();
+  populateDiaryGoalSelect('');
+  openModal('diary-modal');
+}
+function openEditDiaryModal(id) {
+  editingId = id;
+  const d = DB.diaries.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('diary-modal-title').textContent = '支援日誌 編集';
+  document.getElementById('diary-delete-btn').style.display = '';
+  document.getElementById('d-date').value = d.date || '';
+  document.getElementById('d-staff').value = d.staff || '';
+  document.getElementById('d-attend').value = d.attend || '参加';
+  document.getElementById('d-content').value = d.content || '';
+  document.getElementById('d-condition').value = d.condition || '';
+  document.getElementById('d-note').value = d.note || '';
+  setRating(d.rating || '');
+  populateDiaryGoalSelect(d.goalId || '');
+  openModal('diary-modal');
+}
+function clearDiaryForm() {
+  ['d-date','d-staff','d-attend','d-goal','d-content','d-condition','d-note'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  setRating('');
+}
+function setRating(val) {
+  diaryRating = val;
+  document.querySelectorAll('#d-rating-sel .rating-btn').forEach(btn => {
+    btn.className = 'rating-btn';
+    const bv = btn.getAttribute('data-val');
+    if (bv === val) {
+      if (val === 'good') btn.classList.add('active-good');
+      else if (val === 'mid') btn.classList.add('active-mid');
+      else if (val === 'bad') btn.classList.add('active-bad');
+    }
+  });
+}
+function saveDiary() {
+  const date = document.getElementById('d-date').value;
+  if (!date) { alert('日付を入力してください'); return; }
+  const diaries = DB.diaries;
+  const data = {
+    userId: selectedUserId, date, staff: v('d-staff'), attend: v('d-attend'),
+    goalId: v('d-goal'),
+    content: v('d-content'), condition: v('d-condition'), note: v('d-note'), rating: diaryRating
+  };
+  if (editingId) {
+    const i = diaries.findIndex(x => x.id === editingId);
+    if (i >= 0) diaries[i] = { ...diaries[i], ...data };
+  } else {
+    diaries.push({ id: uid(), ...data });
+  }
+  DB.diaries = diaries;
+  closeModal('diary-modal');
+  renderPage('diary');
+}
+function deleteDiary() {
+  if (!confirm('この日誌を削除しますか？')) return;
+  DB.diaries = DB.diaries.filter(d => d.id !== editingId);
+  closeModal('diary-modal');
+  renderPage('diary');
+}
+
+// ===================== 支援目標 =====================
+function renderGoals(c) {
+  const user = DB.users.find(u => u.id === selectedUserId);
+  const goals = DB.goals.filter(g => g.userId === selectedUserId).sort((a,b) => (b.start||'').localeCompare(a.start||''));
+  c.innerHTML = `
+    <div class="breadcrumb"><a onclick="showPage('users')">利用者一覧</a> › <span>${esc(user?.name || '')}</span> › 支援目標</div>
+    ${goals.length ? goals.map(renderGoalItem).join('') : '<div class="empty-state"><div class="icon">🎯</div><p>支援目標がまだありません</p></div>'}
+  `;
+}
+function renderGoalItem(g) {
+  const { prog, isAuto, linkedCount } = getDisplayProgress(g);
+  const p = Math.min(100, Math.max(0, prog));
+  const barColor = p >= 80 ? '#16a34a' : p >= 50 ? '#d97706' : '#1a56db';
+  return `<div class="goal-item" onclick="openEditGoalModal('${g.id}')">
+    <div class="goal-header">
+      <div>
+        ${g.long ? `<div style="font-size:13px;font-weight:700;color:#2c2c2a;margin-bottom:4px">長期目標: ${esc(g.long).substring(0,60)}${g.long.length>60?'…':''}</div>` : ''}
+        ${g.longSupport ? `<div class="goal-detail" style="color:#999;font-size:11px">長期手立て: ${esc(g.longSupport)}</div>` : ''}
+        <div class="goal-title">短期目標: ${esc(g.short)}</div>
+        ${g.support ? `<div class="goal-detail">短期手立て:</div>${renderSupportText(g.support)}` : ''}
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:16px">
+        <div style="font-size:20px;font-weight:700;color:${barColor}">${p}%</div>
+        ${isAuto ? `<div style="font-size:10px;color:#1a56db">📊 日誌${linkedCount}件から算出</div>` : `<div style="font-size:10px;color:#aaa">手動設定</div>`}
+        ${g.staff ? `<div style="font-size:11px;color:#888">${esc(g.staff)}</div>` : ''}
+      </div>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar" style="width:${p}%;background:${barColor}"></div></div>
+    ${(g.start || g.end) ? `<div class="goal-period">📅 ${esc(g.start||'')} 〜 ${esc(g.end||'')}</div>` : ''}
+  </div>`;
+}
+function openAddGoalModal() {
+  editingId = null;
+  clearGoalForm();
+  document.getElementById('goal-modal-title').textContent = '支援目標 設定';
+  document.getElementById('goal-delete-btn').style.display = 'none';
+  openModal('goal-modal');
+}
+function openEditGoalModal(id) {
+  editingId = id;
+  const g = DB.goals.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('goal-modal-title').textContent = '支援目標 編集';
+  document.getElementById('goal-delete-btn').style.display = '';
+  document.getElementById('g-long').value = g.long || '';
+  document.getElementById('g-long-support').value = g.longSupport || '';
+  document.getElementById('g-short').value = g.short || '';
+  document.getElementById('g-support').value = g.support || '';
+  document.getElementById('g-start').value = g.start || '';
+  document.getElementById('g-end').value = g.end || '';
+  document.getElementById('g-staff').value = g.staff || '';
+  document.getElementById('g-progress').value = g.progress || 0;
+  document.getElementById('g-memo').value = g.memo || '';
+  openModal('goal-modal');
+}
+function clearGoalForm() {
+  ['g-long','g-long-support','g-short','g-support','g-start','g-end','g-staff','g-progress','g-memo'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('g-progress').value = 0;
+}
+function saveGoal() {
+  const short = document.getElementById('g-short').value.trim();
+  if (!short) { alert('短期目標を入力してください'); return; }
+  const goals = DB.goals;
+  const data = {
+    userId: selectedUserId, long: v('g-long'), longSupport: v('g-long-support'), short, support: v('g-support'),
+    start: v('g-start'), end: v('g-end'), staff: v('g-staff'),
+    progress: parseInt(v('g-progress')) || 0, memo: v('g-memo')
+  };
+  if (editingId) {
+    const i = goals.findIndex(x => x.id === editingId);
+    if (i >= 0) goals[i] = { ...goals[i], ...data };
+  } else {
+    goals.push({ id: uid(), ...data });
+  }
+  DB.goals = goals;
+  closeModal('goal-modal');
+  renderPage('goals');
+}
+function deleteGoal() {
+  if (!confirm('この目標を削除しますか？')) return;
+  DB.goals = DB.goals.filter(g => g.id !== editingId);
+  closeModal('goal-modal');
+  renderPage('goals');
+}
+
+// ===================== ピックアップ一覧 =====================
+function renderPickup(c) {
+  const user = DB.users.find(u => u.id === selectedUserId);
+  const allPickups = DB.diaries.filter(d => d.userId === selectedUserId && d.pickup)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const filterVal = document.getElementById('pickup-filter') ? document.getElementById('pickup-filter').value : '';
+  const filtered = filterVal ? allPickups.filter(d => d.rating === filterVal) : allPickups;
+
+  c.innerHTML = `
+    <div class="breadcrumb"><a onclick="showPage('users')">利用者一覧</a> › <span>${esc(user?.name || '')}</span> › 有効支援ピックアップ</div>
+    <div class="card">
+      <div class="card-header">
+        <h3>⭐ 有効な支援 一覧表 <span style="font-weight:400;color:#888;font-size:12px">— ${esc(user?.name||'')} さん</span></h3>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="pickup-filter" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:6px" onchange="renderPickup(document.getElementById('main-content'))">
+            <option value="">すべて</option>
+            <option value="good" ${filterVal==='good'?'selected':''}>✓ 良好のみ</option>
+            <option value="mid" ${filterVal==='mid'?'selected':''}>△ 普通のみ</option>
+            <option value="bad" ${filterVal==='bad'?'selected':''}>✗ 要支援のみ</option>
+          </select>
+          <span style="font-size:12px;color:#888">${filtered.length}件</span>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        ${filtered.length ? `
+        <table class="pickup-table">
+          <thead>
+            <tr>
+              <th style="width:100px">日付</th>
+              <th style="width:80px">担当者</th>
+              <th>支援内容・活動</th>
+              <th>本人の様子・反応</th>
+              <th style="width:80px">評価</th>
+              <th>申し送り・課題</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(d => {
+              const ratingMap = { good: ['#f0fdf4','#166534','✓ 良好'], mid: ['#fffbeb','#92400e','△ 普通'], bad: ['#fff5f5','#991b1b','✗ 要支援'] };
+              const [bg, col, label] = ratingMap[d.rating] || ['#fff','#888','—'];
+              return `<tr>
+                <td style="white-space:nowrap;font-weight:600;color:#1a56db">${esc(d.date)}</td>
+                <td style="white-space:nowrap">${esc(d.staff||'—')}</td>
+                <td>${esc(d.content||'')}</td>
+                <td>${esc(d.condition||'')}</td>
+                <td style="text-align:center"><span style="background:${bg};color:${col};border-radius:10px;padding:2px 8px;font-size:11px;white-space:nowrap">${label}</span></td>
+                <td>${esc(d.note||'')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>` : `<div class="empty-state"><div class="icon">⭐</div><p>支援日誌から「⭐ ピックアップ」ボタンで有効な支援を選んでください</p></div>`}
+      </div>
+    </div>
+    ${filtered.length ? `<div style="font-size:11px;color:#aaa;margin-top:8px;text-align:right">印刷ボタンで一覧表を印刷できます</div>` : ''}
+  `;
+}
+
+// ===================== 次期計画策定 =====================
+function renderNextPlan(c) {
+  const user = DB.users.find(u => u.id === selectedUserId);
+  const diaries = DB.diaries.filter(d => d.userId === selectedUserId);
+  const goals = DB.goals.filter(g => g.userId === selectedUserId);
+  const reviews = DB.reviews.filter(r => r.userId === selectedUserId).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  const pickups = diaries.filter(d => d.pickup).sort((a,b) => a.date.localeCompare(b.date));
+  const latestReview = reviews[0] || null;
+  const goodCount = diaries.filter(d => d.rating === 'good').length;
+  const badCount = diaries.filter(d => d.rating === 'bad').length;
+  const avgProgress = goals.length ? Math.round(goals.reduce((s,g) => s + getDisplayProgress(g).prog, 0) / goals.length) : 0;
+
+  const ovMap = { A:'A: 目標達成', B:'B: おおむね達成', C:'C: 一部達成', D:'D: 未達成', E:'E: 継続検討' };
+  const ovColor = { A:'#16a34a', B:'#16a34a', C:'#d97706', D:'#dc2626', E:'#1a56db' };
+
+  c.innerHTML = `
+    <div class="breadcrumb"><a onclick="showPage('users')">利用者一覧</a> › <span>${esc(user?.name||'')}</span> › 次期計画策定</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <!-- 左: 評価サマリー -->
+      <div class="card">
+        <div class="card-header"><h3>📊 今期の評価サマリー</h3></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+            <div style="text-align:center;background:#f8f8f5;border-radius:8px;padding:10px">
+              <div style="font-size:22px;font-weight:700;color:#1a56db">${diaries.length}</div>
+              <div style="font-size:11px;color:#888">支援記録数</div>
+            </div>
+            <div style="text-align:center;background:#f0fdf4;border-radius:8px;padding:10px">
+              <div style="font-size:22px;font-weight:700;color:#16a34a">${goodCount}</div>
+              <div style="font-size:11px;color:#888">良好評価</div>
+            </div>
+            <div style="text-align:center;background:#fff5f5;border-radius:8px;padding:10px">
+              <div style="font-size:22px;font-weight:700;color:#dc2626">${badCount}</div>
+              <div style="font-size:11px;color:#888">要支援</div>
+            </div>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#666;margin-bottom:8px">目標達成状況</div>
+          ${goals.length ? goals.map(g => {
+            const { prog, isAuto, linkedCount } = getDisplayProgress(g);
+            const p = Math.min(100,Math.max(0,prog));
+            const col = p>=80?'#16a34a':p>=50?'#d97706':'#1a56db';
+            return `<div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+                <span style="color:#444">${esc(g.short)}</span>
+                <span style="font-weight:600;color:${col}">${p}% ${isAuto ? `<span style="font-size:10px;color:#1a56db;font-weight:400">日誌${linkedCount}件</span>` : ''}</span>
+              </div>
+              <div class="progress-bar-bg"><div class="progress-bar" style="width:${p}%;background:${col}"></div></div>
+            </div>`;
+          }).join('') : '<div style="font-size:12px;color:#aaa">目標が設定されていません</div>'}
+          ${goals.length ? `<div style="font-size:12px;color:#888;margin-top:8px;text-align:right">平均達成度: <strong style="color:#1a56db">${avgProgress}%</strong></div>` : ''}
+          ${latestReview ? `
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid #eee">
+              <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">最新振り返り（${esc(latestReview.date)}）</div>
+              ${latestReview.overall ? `<div style="font-size:12px;font-weight:600;color:${ovColor[latestReview.overall]||'#444'};margin-bottom:4px">総合評価: ${ovMap[latestReview.overall]||''}</div>` : ''}
+              ${latestReview.staffNote ? `<div style="font-size:12px;color:#555;line-height:1.6">${esc(latestReview.staffNote)}</div>` : ''}
+            </div>` : ''}
+        </div>
+      </div>
+
+      <!-- 右: 次期課題 & ピックアップ -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-header"><h3>📌 次期への引き継ぎ事項</h3></div>
+          <div class="card-body">
+            ${latestReview?.nextNote ? `<div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${esc(latestReview.nextNote)}</div>` : '<div style="font-size:12px;color:#aaa">振り返り記録の「次期計画への引き継ぎ・課題」が表示されます</div>'}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>⭐ 有効支援 (${pickups.length}件)</h3></div>
+          <div class="card-body" style="max-height:180px;overflow-y:auto;padding:0">
+            ${pickups.length ? pickups.map(d => `
+              <div style="padding:8px 14px;border-bottom:1px solid #eee;font-size:12px">
+                <div style="color:#1a56db;font-weight:600;margin-bottom:2px">${esc(d.date)}</div>
+                <div style="color:#444">${esc((d.content||'').substring(0,60))}${(d.content||'').length>60?'…':''}</div>
+              </div>`).join('') : '<div style="padding:14px;font-size:12px;color:#aaa">ピックアップされた支援がありません</div>'}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${(() => {
+      const nextGoals = goals.filter(g => (g.memo || '').includes('次期計画'));
+      if (!nextGoals.length) return '';
+      return `<div class="card" style="margin-bottom:20px;border:2px solid #1a56db">
+        <div class="card-header" style="background:#f0f4ff">
+          <h3>🎯 策定済みの次期支援目標（2026年7月〜12月）</h3>
+          <div style="font-size:12px;color:#888">「支援目標」ページにも登録済み。クリックで編集できます</div>
+        </div>
+        <div class="card-body">
+          ${nextGoals.map(g => `
+            <div style="cursor:pointer" onclick="openEditGoalModal('${g.id}')">
+              <div style="margin-bottom:8px">
+                <span class="tag">${esc(g.start || '')} 〜 ${esc(g.end || '')}</span>
+                ${g.staff ? `<span class="tag green">担当: ${esc(g.staff)}</span>` : ''}
+              </div>
+              <div style="font-size:12px;font-weight:600;color:#666;margin:10px 0 2px">長期目標</div>
+              <div style="font-size:13px;color:#333;line-height:1.6">${esc(g.long || '—')}</div>
+              ${g.longSupport ? `<div style="font-size:12px;color:#666;line-height:1.6;margin-top:2px">（手立て）${esc(g.longSupport)}</div>` : ''}
+              <div style="font-size:12px;font-weight:600;color:#666;margin:10px 0 2px">短期目標</div>
+              <div style="font-size:13px;color:#333;line-height:1.6">${esc(g.short || '')}</div>
+              <div style="font-size:12px;font-weight:600;color:#666;margin:10px 0 2px">具体的目標と支援内容</div>
+              ${renderSupportText(g.support || '')}
+              ${g.memo ? `<div style="font-size:11px;color:#888;margin-top:8px;line-height:1.6">備考: ${esc(g.memo)}</div>` : ''}
+            </div>
+          `).join('<hr style="border:none;border-top:1px solid #eee;margin:14px 0">')}
+        </div>
+      </div>`;
+    })()}
+
+    <!-- 次期目標入力フォーム -->
+    <div class="card">
+      <div class="card-header">
+        <h3>🎯 次期支援目標 作成（追加用）</h3>
+        <div style="font-size:12px;color:#888">入力後「目標として保存」で支援目標に追加されます</div>
+      </div>
+      <div class="card-body">
+        <div class="form-row single">
+          <div class="form-group"><label>長期目標（次期）</label><textarea id="np-long" rows="2" placeholder="次期の長期目標（半年〜1年）を入力"></textarea></div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group"><label>短期目標（次期） *</label><textarea id="np-short" rows="2" placeholder="次期の短期目標（3〜6ヶ月）を入力"></textarea></div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group"><label>支援内容・手立て</label><textarea id="np-support" rows="3" placeholder="目標達成に向けた具体的な支援内容・方法"></textarea></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>計画開始日</label><input type="date" id="np-start"></div>
+          <div class="form-group"><label>計画終了日</label><input type="date" id="np-end"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>担当職員</label><input type="text" id="np-staff" placeholder="担当者名"></div>
+          <div class="form-group"><label>備考</label><input type="text" id="np-memo" placeholder="その他、特記事項"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <button class="btn primary" style="padding:9px 24px" onclick="saveNextPlanGoal()">＋ 目標として保存</button>
+        </div>
+      </div>
+    </div>
+  `;
+  addVoiceBtns(c);
+}
+
+function addVoiceBtns(container) {
+  if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) return;
+  container.querySelectorAll('textarea:not(.voice-done)').forEach(ta => {
+    ta.classList.add('voice-done');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'voice-btn';
+    btn.title = '音声入力';
+    btn.textContent = '🎤';
+    btn.setAttribute('onclick', `toggleVoice('${ta.id}', this)`);
+    ta.insertAdjacentElement('afterend', btn);
+    const fg = ta.closest('.form-group');
+    if (fg) fg.classList.add('has-voice');
+  });
+}
+
+function saveNextPlanGoal() {
+  const short = document.getElementById('np-short').value.trim();
+  if (!short) { alert('短期目標を入力してください'); return; }
+  const goals = DB.goals;
+  goals.push({
+    id: uid(),
+    userId: selectedUserId,
+    long: document.getElementById('np-long').value.trim(),
+    short,
+    support: document.getElementById('np-support').value.trim(),
+    start: document.getElementById('np-start').value,
+    end: document.getElementById('np-end').value,
+    staff: document.getElementById('np-staff').value.trim(),
+    memo: document.getElementById('np-memo').value.trim(),
+    progress: 0
+  });
+  DB.goals = goals;
+  alert('次期目標を保存しました。「支援目標」ページで確認できます。');
+  ['np-long','np-short','np-support','np-start','np-end','np-staff','np-memo'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+}
+
+// ===================== 振り返り =====================
+function renderReview(c) {
+  const user = DB.users.find(u => u.id === selectedUserId);
+  const reviews = DB.reviews.filter(r => r.userId === selectedUserId).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  const diaries = DB.diaries.filter(d => d.userId === selectedUserId);
+  const goals = DB.goals.filter(g => g.userId === selectedUserId);
+  const goodCount = diaries.filter(d => d.rating === 'good').length;
+  const midCount = diaries.filter(d => d.rating === 'mid').length;
+  const badCount = diaries.filter(d => d.rating === 'bad').length;
+  const avgProgress = goals.length ? Math.round(goals.reduce((s,g) => s + getDisplayProgress(g).prog, 0) / goals.length) : 0;
+
+  c.innerHTML = `
+    <div class="breadcrumb"><a onclick="showPage('users')">利用者一覧</a> › <span>${esc(user?.name || '')}</span> › 振り返り・評価</div>
+    <div class="review-grid" style="margin-bottom:20px">
+      <div class="review-stat"><div class="num">${diaries.length}</div><div class="label">支援日誌 記録数</div></div>
+      <div class="review-stat"><div class="num" style="color:#1a56db">${avgProgress}%</div><div class="label">目標平均達成度</div></div>
+      <div class="review-stat"><div class="num" style="color:#16a34a">${goodCount}</div><div class="label">良好評価 回数</div></div>
+      <div class="review-stat"><div class="num" style="color:#991b1b">${badCount}</div><div class="label">要支援評価 回数</div></div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3>目標別達成状況</h3></div>
+      <div class="card-body">
+        ${goals.length ? goals.map(g => {
+          const { prog, isAuto, linkedCount } = getDisplayProgress(g);
+          const p = Math.min(100, Math.max(0, prog));
+          const barColor = p >= 80 ? '#16a34a' : p >= 50 ? '#d97706' : '#1a56db';
+          return `<div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+              <span>${esc(g.short)}</span>
+              <span style="font-weight:600;color:${barColor}">${p}% ${isAuto ? `<span style="font-size:10px;color:#1a56db;font-weight:400">日誌${linkedCount}件</span>` : ''}</span>
+            </div>
+            <div class="progress-bar-bg"><div class="progress-bar" style="width:${p}%;background:${barColor}"></div></div>
+            ${(g.start||g.end)?`<div style="font-size:11px;color:#888;margin-top:2px">${esc(g.start||'')} 〜 ${esc(g.end||'')}</div>`:''}
+          </div>`;
+        }).join('') : '<div style="color:#aaa;font-size:13px">目標が設定されていません</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>振り返り・評価記録</h3></div>
+      <div class="card-body" style="padding:0">
+        ${reviews.length ? reviews.map(r => {
+          const ovMap = { A:'✓ 目標達成', B:'◎ おおむね達成', C:'△ 一部達成', D:'✗ 未達成', E:'→ 継続検討' };
+          const ovColor = { A:'green', B:'green', C:'amber', D:'red', E:'' };
+          return `<div style="padding:14px 18px;border-bottom:1px solid #eee;cursor:pointer" onclick="openEditReviewModal('${r.id}')">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div><span class="date-badge">${r.date||''}</span> <span style="font-size:12px;color:#888;margin-left:8px">${esc(r.period||'')}</span></div>
+              ${r.overall?`<span class="tag ${ovColor[r.overall]||''}">${ovMap[r.overall]||r.overall}</span>`:''}
+            </div>
+            ${r.staffNote?`<div style="font-size:13px;color:#444">${esc(r.staffNote.substring(0,80))}${r.staffNote.length>80?'…':''}</div>`:''}
+            ${r.evaluator?`<div style="font-size:11px;color:#888;margin-top:4px">評価者: ${esc(r.evaluator)}</div>`:''}
+          </div>`;
+        }).join('') : '<div style="padding:20px;text-align:center;color:#aaa;font-size:13px">振り返り記録がまだありません</div>'}
+      </div>
+    </div>
+  `;
+}
+function openAddReviewModal() {
+  editingId = null;
+  clearReviewForm();
+  document.getElementById('review-delete-btn').style.display = 'none';
+  document.getElementById('rv-date').value = today();
+  openModal('review-modal');
+}
+function openEditReviewModal(id) {
+  editingId = id;
+  const r = DB.reviews.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('review-delete-btn').style.display = '';
+  document.getElementById('rv-date').value = r.date || '';
+  document.getElementById('rv-period').value = r.period || '';
+  document.getElementById('rv-self').value = r.selfNote || '';
+  document.getElementById('rv-staff').value = r.staffNote || '';
+  document.getElementById('rv-next').value = r.nextNote || '';
+  document.getElementById('rv-overall').value = r.overall || '';
+  document.getElementById('rv-evaluator').value = r.evaluator || '';
+  openModal('review-modal');
+}
+function clearReviewForm() {
+  ['rv-date','rv-period','rv-self','rv-staff','rv-next','rv-overall','rv-evaluator'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+}
+function saveReview() {
+  const date = document.getElementById('rv-date').value;
+  if (!date) { alert('評価日を入力してください'); return; }
+  const reviews = DB.reviews;
+  const data = {
+    userId: selectedUserId, date, period: v('rv-period'),
+    selfNote: v('rv-self'), staffNote: v('rv-staff'), nextNote: v('rv-next'),
+    overall: v('rv-overall'), evaluator: v('rv-evaluator')
+  };
+  if (editingId) {
+    const i = reviews.findIndex(x => x.id === editingId);
+    if (i >= 0) reviews[i] = { ...reviews[i], ...data };
+  } else {
+    reviews.push({ id: uid(), ...data });
+  }
+  DB.reviews = reviews;
+  closeModal('review-modal');
+  renderPage('review');
+}
+function deleteReview() {
+  if (!confirm('この振り返り記録を削除しますか？')) return;
+  DB.reviews = DB.reviews.filter(r => r.id !== editingId);
+  closeModal('review-modal');
+  renderPage('review');
+}
+
+// ===================== ユーティリティ =====================
+function exportData() {
+  const data = { users: DB.users, diaries: DB.diaries, goals: DB.goals, reviews: DB.reviews };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '個別支援データ_' + today() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 1000);
+}
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.users || !data.diaries) { alert('形式が正しくありません'); return; }
+      const exU = new Set(DB.users.map(u => u.id));
+      const exD = new Set(DB.diaries.map(d => d.id));
+      const exG = new Set(DB.goals.map(g => g.id));
+      const exR = new Set(DB.reviews.map(r => r.id));
+      DB.users = [...DB.users, ...data.users.filter(u => !exU.has(u.id))];
+      DB.diaries = [...DB.diaries, ...data.diaries.filter(d => !exD.has(d.id))];
+      DB.goals = [...DB.goals, ...(data.goals || []).filter(g => !exG.has(g.id))];
+      DB.reviews = [...DB.reviews, ...(data.reviews || []).filter(r => !exR.has(r.id))];
+      input.value = '';
+      alert('インポートしました。利用者: +' + data.users.filter(u => !exU.has(u.id)).length +
+        '件、日誌: +' + data.diaries.filter(d => !exD.has(d.id)).length + '件');
+      renderPage(currentPage);
+    } catch (err) { alert('読み込みエラー: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// 短期目標の手立て（①②③…形式の具体的項目）を項目ごとに分割する。
+// マーカーが2件未満（＝箇条書きされていない）場合は null を返し、呼び出し側で通常表示にフォールバックする。
+const NUMBERED_MARKER_RE = /(?:^|\n)[ \t]*([①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳])[ \t]*/g;
+function splitNumberedItems(text) {
+  const t = (text || '').trim();
+  if (!t) return null;
+  const matches = [...t.matchAll(NUMBERED_MARKER_RE)];
+  if (matches.length < 2) return null;
+  return matches.map((m, i) => {
+    const start = m.index + m[0].length;
+    const end = i + 1 < matches.length ? matches[i + 1].index : t.length;
+    return { num: m[1], body: t.slice(start, end).trim() };
+  });
+}
+// 短期目標の手立てテキストを、項目ごとに明確に分けたHTML（未分割ならこれまで通りの単一ブロック）に変換する。
+function renderSupportText(text) {
+  const items = splitNumberedItems(text);
+  if (!items) return `<div class="support-plain">${esc(text || '')}</div>`;
+  return `<div class="support-items">${items.map(it =>
+    `<div class="support-item"><span class="support-item-num">${esc(it.num)}</span><div class="support-item-body">${esc(it.body)}</div></div>`
+  ).join('')}</div>`;
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function today() { return new Date().toISOString().slice(0,10); }
+
+// 紐付いた日誌の評価から達成度を自動計算（良好=100, 普通=50, 要支援=0 の平均）
+// 評価が代表的でない場合は null を返す（→手動値にフォールバック）。
+// ・評価済みが0件
+// ・評価済みが紐付け日誌の過半数に満たない（例: 有効支援だけ「良好」を付けた状態だと
+//   全部良好＝100%という偏った値になり実態を表さないため、自動計算しない）
+function calcGoalProgress(goalId) {
+  const linked = DB.diaries.filter(d => d.goalId === goalId);
+  const rated = linked.filter(d => d.rating);
+  if (!rated.length) return null;
+  if (rated.length * 2 < linked.length) return null; // 評価が過半数未満なら代表性なしとみなす
+  const score = { good: 100, mid: 50, bad: 0 };
+  return Math.round(rated.reduce((s, d) => s + (score[d.rating] || 0), 0) / rated.length);
+}
+// 自動計算値があればそちら、なければ手動設定値
+function getDisplayProgress(g) {
+  const auto = calcGoalProgress(g.id);
+  return { prog: auto !== null ? auto : (parseInt(g.progress) || 0), isAuto: auto !== null,
+           linkedCount: DB.diaries.filter(d => d.goalId === g.id && d.rating).length };
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ===================== 音声入力 =====================
+(function setupVoice() {
+  try {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      // 音声認識非対応ブラウザでは、HTMLに直書きされたマイクボタンを消す（押してもエラーになるため）
+      document.querySelectorAll('.voice-btn').forEach(b => b.style.display = 'none');
+      return;
+    }
+
+    let recog = null;
+    let activeBtn = null;
+    let activeTarget = null;
+    let baseText = '';       // 録音開始時点のテキスト
+    let manualStop = false;  // ユーザーが停止ボタンを押したか
+    let fileWarned = false;  // file:// 警告は一度だけ
+
+    function stopRecog() {
+      manualStop = true;
+      if (recog) { try { recog.onend = null; recog.stop(); } catch(e){} recog = null; }
+      if (activeBtn) { activeBtn.classList.remove('recording'); activeBtn.textContent = '🎤'; }
+      activeBtn = null; activeTarget = null;
+    }
+
+    function startRecog() {
+      recog = new SpeechRecognition();
+      recog.lang = 'ja-JP';
+      recog.continuous = true;
+      recog.interimResults = true;  // 途中経過もリアルタイム表示
+      recog.onresult = e => {
+        let finalText = '';
+        let interim = '';
+        for (let i = 0; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        if (finalText) {
+          baseText = baseText + (baseText && !baseText.endsWith('\n') ? '\n' : '') + finalText;
+        }
+        const sep = baseText && !baseText.endsWith('\n') ? '\n' : '';
+        activeTarget.value = baseText + (interim ? sep + interim : '');
+      };
+      recog.onerror = ev => {
+        const err = ev && ev.error ? ev.error : '';
+        // no-speech / aborted は無視して聞き続ける（onend で自動再開）
+        if (err === 'no-speech' || err === 'aborted') return;
+        const handled = activeBtn;
+        stopRecog();
+        let msg;
+        if (err === 'not-allowed' || err === 'service-not-allowed') {
+          msg = 'マイクの使用が許可されていません。\n\n' +
+            '・ブラウザのアドレスバーのマイクアイコンから「許可」してください。\n' +
+            '・ファイルを直接開いている場合（file://）は許可ダイアログが出ません。' +
+            'ローカルサーバー経由か https で開いてください。';
+        } else if (err === 'network') {
+          msg = '音声認識サーバーに接続できませんでした。\n\n' +
+            'インターネット接続を確認のうえ、http(s) 経由で開いてください。';
+        } else if (err === 'audio-capture') {
+          msg = 'マイクが見つかりません。Windowsのサウンド設定で入力マイクと音量を確認してください。';
+        } else {
+          msg = '音声入力でエラーが発生しました（' + (err || '不明') + '）。';
+        }
+        if (handled) alert('🎤 ' + msg);
+      };
+      recog.onend = () => {
+        // 停止ボタンを押していなければ自動で再開（無音タイムアウト対策）
+        if (!manualStop && activeBtn) {
+          try { recog.start(); } catch(e) { setTimeout(() => { if (!manualStop && activeBtn) startRecog(); }, 300); }
+        }
+      };
+      recog.start();
+    }
+
+    window.toggleVoice = function(targetId, btn) {
+      try {
+        if (activeBtn === btn) { stopRecog(); return; }
+        stopRecog();
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        manualStop = false;
+        activeBtn = btn; activeTarget = el;
+        baseText = el.value;
+        btn.classList.add('recording'); btn.textContent = '⏹';
+        if (location.protocol === 'file:' && !fileWarned) {
+          fileWarned = true;
+          alert('🎤 ファイルを直接開いている（file://）ため、音声入力が動作しない場合があります。\n\n' +
+            'うまくいかないときは、ローカルサーバー経由か https でこのページを開いてください。');
+        }
+        startRecog();
+      } catch(e) {
+        stopRecog();
+        alert('🎤 音声入力を開始できませんでした: ' + (e && e.message ? e.message : e));
+      }
+    };
+
+    // モーダル内の全テキストエリアにマイクボタンを追加
+    document.querySelectorAll('.modal textarea').forEach(ta => {
+      try {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'voice-btn';
+        btn.title = '音声入力';
+        btn.textContent = '🎤';
+        btn.setAttribute('onclick', `toggleVoice('${ta.id}', this)`);
+        if (ta.nextElementSibling && ta.nextElementSibling.classList.contains('voice-btn')) return;
+        ta.insertAdjacentElement('afterend', btn);
+        const fg = ta.closest('.form-group');
+        if (fg) fg.classList.add('has-voice');
+      } catch(e) {}
+    });
+  } catch(e) {}
+})();
+
+// ===================== 初期データ投入（手書き記録の取り込み） =====================
+// 一度だけ実行。再読み込みしても重複登録しません。
+(function seedHandwrittenData() {
+  const SEED_FLAG = 'isp_seed_handwrite_v1';
+  try {
+    if (localStorage.getItem(SEED_FLAG)) return;
+  } catch (e) { /* localStorage不可でも続行（その場限り） */ }
+
+  // 対象利用者（必要に応じて編集してください）
+  const userId = uid();
+  const users = DB.users;
+  users.push({
+    id: userId,
+    name: '記録対象者',
+    kana: '',
+    birth: '',
+    gender: '',
+    level: '',
+    service: '生活介護',
+    office: '',
+    memo: '手書き支援記録（3月分）より取り込み。氏名は仮置きです。'
+  });
+  DB.users = users;
+
+  // 手書き記録（年は2026年と仮定）。content=支援内容、condition=本人の様子。
+  const STAFF = '和田';
+  const entries = [
+    { date: '2026-03-16', content: '散歩やバス停まで、お友達への接近の見守り。「ピンクの花だね」と話題を伝え、お友達との接近を見守り、声をかける間も笑顔が出ていた。〔要確認〕' },
+    { date: '2026-03-17', content: '今日の課題で車椅子操作をした。みんなで遊べたら、お友達を呼ぶ伝言を見守った。声かけ前に「お休みだね」と反応し、少しずつ伝わるよう、お互いに気を配った。〔要確認〕' },
+    { date: '2026-03-18', content: '「久しぶりだね。来月はどこかへお会いする？」散歩やバスから外の景色を見て「分かるよ」と答えながら楽しめていた。〔要確認〕' },
+    { date: '2026-03-20', content: '母とのふれあいが少なくさびしそうに感じ、スタッフの声かけでもうまく話せない場面があり不安そう。声をかけると「朝の会でお友達に伝える」と話す時もあった。〔要確認〕' },
+    { date: '2026-03-23', content: '散歩中に話題を交え気軽に挨拶。うどん屋ではハードルが高い様子でテーブルを利用。食べる前のポーズやボールへ入れることを理解し、会話を作っていた。〔要確認〕' },
+    { date: '2026-03-24', content: '花などの飾りつけの話に意欲を高くもち、少し手伝えるが本心では消極的に考えている様子。やや周囲の人を気にしながら取り組んでいた。〔要確認〕' },
+    { date: '2026-03-25', content: '花を貼る課題に取り組む。一人で関わることを伝えたことや、お友達にまわりで欲しいと伝えたことをやろうとする場面もあった。散歩からの帰り際やお店の話をすると、はっきりした言葉も多くなり安定していた。〔要確認〕' },
+    { date: '2026-03-27', content: '「昨日お母さんが来た？」の話。和田の前から少し離れていても、引き続き「お母さんなのに」と探してくる様子があった。〔要確認〕' },
+    { date: '2026-03-01', content: '話題に笑顔も多めで取り組めている。話題を交えながら声かけするとうれしそう。OTは終わるまで「大丈夫だよ」と声をかけており、楽しく実施できていた。〔要確認〕' }
+  ];
+
+  const diaries = DB.diaries;
+  entries.forEach(e => {
+    diaries.push({
+      id: uid(),
+      userId,
+      date: e.date,
+      staff: STAFF,
+      attend: '参加',
+      content: e.content,
+      condition: '',
+      note: '',
+      rating: ''
+    });
+  });
+  DB.diaries = diaries;
+
+  try { localStorage.setItem(SEED_FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 重複利用者の統合（TA = 記録対象者） =====================
+// 「TA」と「記録対象者」は同一人物。両者の日誌・目標・振り返りを1人にまとめる。
+// 一度だけ実行。再読み込みしても再実行しません。
+(function mergeDuplicateUsers() {
+  const MERGE_FLAG = 'isp_merge_dupe_v1';
+  try { if (localStorage.getItem(MERGE_FLAG)) return; } catch (e) { return; }
+
+  const DUPE_NAMES = ['TA', '記録対象者'];
+  const users = DB.users;
+  const group = users.filter(u => DUPE_NAMES.includes((u.name || '').trim()));
+
+  // 新規環境では「記録対象者」1人だけが作成されるため、重複がなくても表示名を「TA」に統一する
+  // （後続の処理・画面表記はすべて「TA」を前提としているため）
+  if (group.length === 1 && (group[0].name || '').trim() === '記録対象者') {
+    group[0].name = 'TA';
+    DB.users = users.map(u => u.id === group[0].id ? group[0] : u);
+  }
+
+  // 同一人物候補が2件以上ある場合のみ統合
+  if (group.length >= 2) {
+    // 生き残り: 「記録対象者」を優先、なければ先頭
+    const survivor = group.find(u => (u.name || '').trim() === '記録対象者') || group[0];
+    const mergedIds = group.filter(u => u.id !== survivor.id).map(u => u.id);
+
+    // プロフィールの空欄を、もう一方の値で補完
+    group.forEach(u => {
+      if (u.id === survivor.id) return;
+      ['kana', 'birth', 'gender', 'level', 'service', 'office', 'memo'].forEach(f => {
+        if (!survivor[f] && u[f]) survivor[f] = u[f];
+      });
+    });
+
+    // 統合後の氏名は「TA」にする
+    survivor.name = 'TA';
+
+    // 子レコードを survivor に付け替え
+    const reassign = arr => arr.map(x => mergedIds.includes(x.userId) ? { ...x, userId: survivor.id } : x);
+    DB.diaries = reassign(DB.diaries);
+    DB.goals = reassign(DB.goals);
+    DB.reviews = reassign(DB.reviews);
+
+    // 重複ユーザーを削除し、survivor を更新
+    DB.users = users
+      .filter(u => !mergedIds.includes(u.id))
+      .map(u => u.id === survivor.id ? survivor : u);
+
+    selectedUserId = survivor.id;
+  }
+
+  try { localStorage.setItem(MERGE_FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 氏名の統一（記録対象者 → TA） =====================
+// 旧環境では統合フラグが既に立っていて上の改名処理が実行されないため、
+// フラグは使わず毎回点検し、「TA」が不在で「記録対象者」がいれば改名する（自己修復）。
+(function unifyTAName() {
+  const users = DB.users;
+  if (users.some(u => (u.name || '').trim() === 'TA')) return;
+  let changed = false;
+  users.forEach(u => {
+    if ((u.name || '').trim() === '記録対象者') { u.name = 'TA'; changed = true; }
+  });
+  if (changed) {
+    DB.users = users;
+    try { console.info('[個別支援管理] 利用者「記録対象者」の氏名を「TA」に統一しました。'); } catch (e) {}
+  }
+})();
+
+// ===================== 初期データ投入 第2弾（手書き記録 5〜6月分） =====================
+// 既存の利用者（TA / 記録対象者）に追記。一度だけ実行。
+(function seedHandwrittenData2() {
+  const SEED_FLAG = 'isp_seed_handwrite_v2';
+  try {
+    if (localStorage.getItem(SEED_FLAG)) return;
+  } catch (e) { /* localStorage不可でも続行 */ }
+
+  // 追記先の利用者を特定（TA / 記録対象者）。無ければ新規作成。
+  const users = DB.users;
+  let target = users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  if (!target) {
+    target = {
+      id: uid(), name: 'TA', kana: '', birth: '', gender: '',
+      level: '', service: '生活介護', office: '',
+      memo: '手書き支援記録より取り込み。氏名は仮置きです。'
+    };
+    users.push(target);
+    DB.users = users;
+  }
+  const userId = target.id;
+
+  // 手書き記録（年は2026年と仮定）。判読不確かな箇所は〔要確認〕。
+  const STAFF = '和田';
+  const entries = [
+    { date: '2026-05-18', content: 'みんなで遊べることや出来たら遊べることを伝え、課題をする時も関わった。前回よりお友達への接近や声かけを見守り、少しずつ伝わるよう関わった。〔要確認〕' },
+    { date: '2026-05-19', content: '散歩した。挨拶も「○○だね」「○○して下さい」と自分の気持ちを表現できた。〔要確認〕' },
+    { date: '2026-05-20', content: '同じテーブルなのですぐに目標を立て、みんなの見守りで決めた場面で分けていた。お互いに気にしながらテーブルを使えていた。〔要確認〕' },
+    { date: '2026-05-22', content: '伝えようとする気持ちがあり「課題が分かるよ」と言葉も多い。開くと「お休みだね」と話し、みんなでジェスチャーを見せていた。〔要確認〕' },
+    { date: '2026-05-25', content: 'ビーズタワーやストロー通しにとても意欲的に取り組む。お友達や職員に変化を求める行動も見られた。〔要確認〕' },
+    { date: '2026-05-26', content: 'ビーズタワーを片付けるダンボール箱にどこまであるか、外のカラーボールの色を伝えながら入れることをOTも見守る場面があった。〔要確認〕' },
+    { date: '2026-05-27', content: 'カラーリハの時間も早出して取り組めた。お互い簡単な作業もできている。バス停まで並んでいて「○田さんだね」「お母さんだね」などとお話する場面もあった。〔要確認〕' },
+    { date: '2026-05-09', content: 'バス停の迎え、到着時にトイレ希望があり、すぐに排尿できた。「○田くんだね」と次のお友達なら笑顔で言い、支援者に話す場面もあった。〔要確認・日付要確認〕' },
+    { date: '2026-06-01', content: '今日のすてっぷ（活動）をとてもうれしそうにやっている。ビーズをつかむ作業もいきいきとして、すごく楽しくゲームをすることができた。〔要確認〕' }
+  ];
+
+  const diaries = DB.diaries;
+  entries.forEach(e => {
+    diaries.push({
+      id: uid(), userId, date: e.date, staff: STAFF, attend: '参加',
+      content: e.content, condition: '', note: '', rating: ''
+    });
+  });
+  DB.diaries = diaries;
+
+  try { localStorage.setItem(SEED_FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 初期データ投入 第3弾（手書き記録 6月分・IMG_4490） =====================
+// 既存の利用者（TA / 記録対象者）に追記。一度だけ実行。崩し字が強く確度低め。
+(function seedHandwrittenData3() {
+  const SEED_FLAG = 'isp_seed_handwrite_v3';
+  try {
+    if (localStorage.getItem(SEED_FLAG)) return;
+  } catch (e) { /* localStorage不可でも続行 */ }
+
+  const users = DB.users;
+  let target = users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  if (!target) {
+    target = {
+      id: uid(), name: 'TA', kana: '', birth: '', gender: '',
+      level: '', service: '生活介護', office: '',
+      memo: '手書き支援記録より取り込み。氏名は仮置きです。'
+    };
+    users.push(target);
+    DB.users = users;
+  }
+  const userId = target.id;
+
+  const STAFF = '和田';
+  const entries = [
+    { date: '2026-06-02', content: '「友達はゴミ（片付け）をやって、おやつ食べる」と利用者へ伝えることでできている。お友達への接近や声かけが初めて少しできた様子を見せた。〔要確認〕' },
+    { date: '2026-06-03', content: '言い換える言葉が内容と違うが「朝の会、お会へ入れて」と話す。自分のトイレで排尿することやみんなと過ごすことに取り組んでいる。〔要確認〕' },
+    { date: '2026-06-06', content: '個別課題にたくさん取り組んだ。前日に行った実習先での思い・気持ちを職員に伝えることもできた。〔要確認〕' },
+    { date: '2026-06-09', content: 'めいと一緒に頭の体操（場面）を行うと利用者へ伝える。両膝を保って指示する場面を判断する。スタッフから促されると笑顔を交えて言える。〔要確認〕' },
+    { date: '2026-06-10', content: '散歩に行けた。「明日学校に行く」と話す。お友達も交えて言葉が多くなる。バス停まで到着すると排尿してしまうが、トイレを待ち言葉も話して行ってきている。〔要確認〕' },
+    { date: '2026-06-12', content: 'LINEで母から来たことにコメントを伝え合うと、聞き取れたのが2〜3回。問いに答えている。話す数は少なく、やや調子が良くない。〔要確認〕' },
+    { date: '2026-06-14', content: '飾り付けで、花さんもお友達や職員に表現していたので、普段より少しお友達と取り組めた。〔要確認〕' },
+    { date: '2026-06-15', content: '今日まで〜と自分の気持ち（うれしさ）を伝えながら散歩に取り組んだ。〔要確認〕' },
+    { date: '2026-06-16', content: '〜と話すとこちらもうれしくなり、笑顔も見られた。〔要確認〕' }
+  ];
+
+  const diaries = DB.diaries;
+  entries.forEach(e => {
+    diaries.push({
+      id: uid(), userId, date: e.date, staff: STAFF, attend: '参加',
+      content: e.content, condition: '', note: '', rating: ''
+    });
+  });
+  DB.diaries = diaries;
+
+  try { localStorage.setItem(SEED_FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 初期データ投入 第4弾（手書き記録 1〜3月・IMG_4478/4480） =====================
+// 既存の利用者（TA / 記録対象者）に追記。一度だけ実行。崩し字が強く確度低め。
+// 注: 3/16 は seed v1（IMG_4479）に既存のため、IMG_4480 側の3/16は取り込まない。
+(function seedHandwrittenData4() {
+  const SEED_FLAG = 'isp_seed_handwrite_v4';
+  try {
+    if (localStorage.getItem(SEED_FLAG)) return;
+  } catch (e) { /* localStorage不可でも続行 */ }
+
+  const users = DB.users;
+  let target = users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  if (!target) {
+    target = {
+      id: uid(), name: 'TA', kana: '', birth: '', gender: '',
+      level: '', service: '生活介護', office: '',
+      memo: '手書き支援記録より取り込み。氏名は仮置きです。'
+    };
+    users.push(target);
+    DB.users = users;
+  }
+  const userId = target.id;
+
+  const STAFF = '和田';
+  const entries = [
+    // IMG_4478（1〜2月）
+    { date: '2026-01-19', content: '今日も課題に向かい、支援者が忙しい中でも早めにビーズタワーに取り組めている。〔要確認〕' },
+    { date: '2026-01-20', content: 'バス停近くから利用。「学校楽しかった、校外活動もある」と学校の予定を伝える。やりたいことは今後家で決めて行うと話し「めいとする」と返答あり。〔要確認〕' },
+    { date: '2026-01-21', content: '「来月○○さんが来る日に誕生日会する？」と再来週の予定もよく分かっている様子。〔要確認〕' },
+    { date: '2026-01-23', content: '校外活動のため休み明け、校外・バス停迎え。今日のことをお友達に伝え、支援者にハッピーパーティを開いてもらい嬉しそうにしている。〔要確認〕' },
+    { date: '2026-02-02', content: 'バス停より帰る時「座りすぎてしまう」を気にする様子。校外・バス下校の不安を和らげ、本日は前の家へ。行けることを楽しみにしている。〔要確認〕' },
+    { date: '2026-02-03', content: '新しいお友達へ自己紹介。「自己紹介する」と言い名前を伝える。少し恥ずかしそうだが伝えている。明日の予定も支援者へ伝える。〔要確認〕' },
+    { date: '2026-02-04', content: '校外・バス停迎え。「学校行く、今日◯◯先生休み」と今日の予定を伝える。〔要確認〕' },
+    { date: '2026-02-06', content: 'ビーズタワーを目で選んで行い、制作も少し取り組む。見本を見せるとどんどん作るのが速い。〔要確認・日付要確認〕' },
+    { date: '2026-02-08', content: 'うさぎの型はめを家でもしたとのことで、着くと教えてくれる。見本に合わせるよう促すと、色と形を確認してからはめられている。河田先生の運動でストレッチ等に笑顔で取り組む。〔要確認〕' },
+    // IMG_4480（3月前半）※3/16はseed v1と重複のため除外
+    { date: '2026-03-02', content: '登校でまず目標立て、理由は「youtube見たから」。「明日は学校行ける」とのこと。〔要確認〕' },
+    { date: '2026-03-03', content: '物語を説明して後に問題を出す。答えられないこともあるが少しずつ正確に答える。〔要確認〕' },
+    { date: '2026-03-04', content: 'バス停迎え。学校の話「学校行きたい」「三送会（卒業式）の準備」をして笑顔あり。〔要確認〕' },
+    { date: '2026-03-06', content: '物語を聞いた後の問題で、間違いに気づける。うさぎの型はめは難しい見本でもスムーズに行える。〔要確認〕' },
+    { date: '2026-03-09', content: '新しいパズル（初めて）に取り組む。最初は「やめとく」だが「できるよ」と伝えるとやる気に。途中でも形をよく見て取り組める。〔要確認〕' },
+    { date: '2026-03-10', content: '座る場所の変更を伝えるとスムーズに受け入れ「ここ良い」。河田先生に「ありがとう」と言える。〔要確認〕' },
+    { date: '2026-03-11', content: 'バス停で今日どの順に付くか考えてきており、お友達との対応も自ら伝えられる。〔要確認〕' },
+    { date: '2026-03-13', content: 'トイレでトイレットペーパーが無いのに気付き、慌てずすぐ支援者に伝えられた。〔要確認〕' }
+  ];
+
+  const diaries = DB.diaries;
+  entries.forEach(e => {
+    diaries.push({
+      id: uid(), userId, date: e.date, staff: STAFF, attend: '参加',
+      content: e.content, condition: '', note: '', rating: ''
+    });
+  });
+  DB.diaries = diaries;
+
+  try { localStorage.setItem(SEED_FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 有効支援の自動ピックアップ（介護職視点での選定） =====================
+// 支援日誌のうち、職員の支援（声かけ・見守り・励まし・課題提供・環境調整など）が
+// 本人の前向きな変化（笑顔・できた・伝えられた・意欲・安定・初めての達成 等）に
+// つながったと判断した記録を「有効支援」としてピックアップする。
+// 一度だけ実行。再読み込みしても再実行しません。手動でつけた評価は上書きしません。
+(function pickupEffectiveSupport() {
+  const FLAG = 'isp_pickup_effective_v1';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  // 介護職として「利用者に対して有効であった」と判断した支援日誌の日付
+  const EFFECTIVE_DATES = [
+    '2026-01-23', // 行事(パーティ)・称賛で情緒が安定し嬉しそうにしていた
+    '2026-02-03', // 自己紹介を促すと、恥ずかしがりながらも名前を伝えられた（社会的スキル）
+    '2026-02-06', // 見本を見せると制作がどんどん速くなった（視覚支援が有効）
+    '2026-02-08', // 見本に合わせる促しで色と形を確認してはめられた／運動に笑顔
+    '2026-03-01', // 話題を交えた声かけでうれしそう、OTも楽しく実施できた
+    '2026-03-06', // 反復課題で間違いに自分で気づける／型はめがスムーズ
+    '2026-03-09', // 「できるよ」と励ますとやる気になり、形をよく見て取り組めた
+    '2026-03-10', // 事前に説明することで場所変更を受け入れ「ありがとう」と言えた
+    '2026-03-13', // 困った時(紙が無い)に慌てず支援者に伝えられた（援助要求）
+    '2026-03-16', // 散歩中の話題提供（声かけ）で笑顔が出た
+    '2026-03-23', // 食事場面の構造化(テーブル利用)でポーズを理解し会話を作れた
+    '2026-03-25', // 得意なお店の話題に触れると言葉が増え安定した
+    '2026-05-19', // 散歩・挨拶の中で自分の気持ちを言葉で表現できた
+    '2026-05-25', // ビーズタワー・ストロー通しに意欲的に取り組めた（手指課題が有効）
+    '2026-06-01', // ビーズ作業・ゲームをとても楽しく、いきいきと取り組めた
+    '2026-06-02', // 見通しを伝えると、お友達への接近・声かけが初めて少しできた
+    '2026-06-06', // 個別課題に多く取り組み、実習先での気持ちを職員に伝えられた（感情表出）
+    '2026-06-15'  // うれしさ(自分の気持ち)を伝えながら散歩に取り組めた
+  ];
+  const dateSet = new Set(EFFECTIVE_DATES);
+
+  const target = DB.users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  const diaries = DB.diaries;
+  let count = 0;
+  diaries.forEach(d => {
+    if ((!target || d.userId === target.id) && dateSet.has(d.date)) {
+      d.pickup = true;                 // ピックアップON（ボタンの色が変わる）
+      if (!d.rating) d.rating = 'good'; // 有効＝良好。手動評価があれば尊重して上書きしない
+      count++;
+    }
+  });
+  DB.diaries = diaries;
+
+  // ピックアップ結果をすぐ確認できるよう、対象者を選択し表示先をピックアップ画面にする
+  if (target && count > 0) {
+    selectedUserId = target.id;
+    currentPage = 'pickup';
+  }
+
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 振り返り・評価の自動作成（介護職目線での精査） =====================
+// PDF原本正確版（fixTAAllFromPDF・45件）に準拠し、各日誌の支援結果を
+// 「良好・普通・要支援」の3カテゴリーに分類した振り返り・総合評価を1件作成する（v3）。
+// 既存環境では旧版（v1・v2）の自動生成文面を検出して置き換える。
+// 手動で編集された振り返り（旧文面の目印を含まないもの）・手動でつけた評価は尊重して上書きしない。
+// ※日誌への評価付与は rateTAAllDiaries / pickupTAEffectiveSupport（毎回点検・自己修復）が担当。
+(function buildReviewAndEvaluation() {
+  const FLAG = 'isp_review_eval_v5';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const target = DB.users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  if (!target) { try { localStorage.setItem(FLAG, '1'); } catch (e) {} return; }
+
+  // 旧版（v1=誤読データ準拠／v2=領域別構成）の自動生成振り返りを除去して3分類構成に置き換える。
+  // 手動編集された振り返りは目印の文言を含まないため残る。
+  const OLD_MARKERS = ['1〜6月・43件', 'からの取り込み45件', '3カテゴリーに分類して振り返る', '■ 目標達成状況'];
+  let reviews = DB.reviews.filter(r => !(
+    r.userId === target.id &&
+    r.period === '2026年1月〜6月' &&
+    OLD_MARKERS.some(m => (r.staffNote || '').includes(m))
+  ));
+
+  // 振り返り・評価記録の作成（既存があれば追加しない）
+  const already = reviews.some(r => r.userId === target.id && r.period === '2026年1月〜6月');
+  if (!already) {
+    const selfNote =
+      '（職員による推察・日誌45件より）\n' +
+      '① 手指課題（ビーズタワー・型はめ・パズル）や花丸集めに手応えを感じ、自信につながっている。\n' +
+      '② 学校の出来事・誕生日会・前の家への外出など見通しの立つ話題では自分から言葉が多く、嬉しそうに過ごせている。\n' +
+      '③ 「出来ました」の報告（2/17）や「ありがとう」（3/9）など、できた実感・感謝を自分から伝えられている。\n' +
+      '④ 要求や体調を自分から伝えられた場面（3/13・3/16）は、本人の安心・自信になっていると考えられる。\n' +
+      '⑤ 6/12は言葉数が少なくやや調子が優れない様子。体調・気分の波への配慮を本人も必要としている。';
+
+    const staffNote =
+      '※A=達成／B=おおむね達成／C=一部達成／D=未達成／E=継続検討。日誌45件（IMG_4478〜4480・4489・4490）より。' +
+      '判読不能箇所は【？】、6月分は【要確認:IMG_4490原本照合】付きのため暫定評価。\n' +
+      '① 【長期目標】施設に慣れ、通所し続けられる。関わる人に気持ちを伝えることができる。…評価：B' +
+      '（欠席の記録なく通所を継続。出来事・予定を自分から伝える場面が一貫して多い＝1/20・2/4・2/20など）\n' +
+      '② 【短期目標】環境や関わる人に慣れ、施設に通う頻度を増やしていく。…評価：B' +
+      '（通所は安定。新しいお友達への自己紹介＝2/4、お友達への接近・声かけ＝6/2〔要確認〕と、関われる相手が広がった）\n' +
+      '③ 【具体的目標①】めいと利用時にさらにできることを増やす（会話・絵本等で言葉や数・概念を育てる）…評価：B' +
+      '（物語の読み聞かせ後の問題に少しずつ正答＝3/3・3/4。初めての課題にも励ましで挑戦＝3/6）\n' +
+      '④ 【具体的目標②】様々な手指を使ったあそびや勉強、レクリエーションに取り組む。…評価：A' +
+      '（ビーズタワー・型はめ・パズル・制作に一貫して意欲・集中＝2/8・2/16・2/17・2/23。目標はほぼ達成）\n' +
+      '⑤ 【具体的目標③】自分の気持ちを詳しく相手に伝えることができる。…評価：C' +
+      '（要求の言語化＝3/13、体調の伝達＝3/16、気持ちの表出＝6/6〔要確認〕と「伝える」は前進。「詳しく」は次期継続）\n' +
+      '⑥ 【支援結果の分類◎良好34件】見本提示（2/8）、課題を半分残す設定（2/17）、マーキング（2/23）、励まし（3/6）、' +
+      '事前説明（3/9）、見通しの提示（6/2〔要確認〕）等の支援が、本人の意欲・達成・自己表現につながった。\n' +
+      '⑦ 【支援結果の分類△普通11件】助言を要した（2/24）、完成前に自ら戻す（3/1）、トイレを待てない・排尿の失敗' +
+      '（3/11・5/29・6/10）、試し行動（5/25）、調子の波（6/12）等。支援の失敗ではなく、声かけ・誘導のタイミング調整で改善見込み。\n' +
+      '⑧ 【支援結果の分類✗要支援0件】明確な拒否・悪化が読み取れた日は無かった。';
+
+    const nextNote =
+      '① 短期目標「環境や関わる人に慣れ、施設に通う頻度を増やしていく」に沿い、強みである手指課題と' +
+      '花丸による達成の見える化を継続し「達成→称賛→自信」のサイクルを回す。\n' +
+      '② 要求・気持ちを言葉で伝える力（3/13・3/16・6/6）を伸ばすため、伝える機会を意図的に増やす。\n' +
+      '③ 対人面は6/2の芽生えを踏まえ、支援者の仲立ちと見通しの提示のもとスモールステップで継続。\n' +
+      '④ 排泄は早めの声かけ・トイレ誘導のタイミング調整で失敗を減らす（3/11・5/29・6/10）。\n' +
+      '⑤ 6月分（IMG_4490）は読み取り精度が低く、5/8・5/9（IMG_4491）は未取込のため、' +
+      '原本との照合・手入力を支援チームで行うこと。数値目標の設定前に事実確認を推奨。';
+
+    reviews.push({
+      id: uid(),
+      userId: target.id,
+      date: today(),
+      period: '2026年1月〜6月',
+      selfNote,
+      staffNote,
+      nextNote,
+      overall: 'B', // B: おおむね達成（観察された成長の総合評価・暫定）
+      evaluator: '和田'
+    });
+  }
+  DB.reviews = reviews;
+
+  // 作成した振り返りをすぐ確認できるよう、対象者を選択し表示先を振り返り画面にする
+  selectedUserId = target.id;
+  currentPage = 'review';
+
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 支援目標の取り込み（支援目標シート IMG_4840） =====================
+// 手書きの「支援目標」シートを取り込み。長期目標→長期目標欄、短期目標→短期目標欄、
+// 具体的目標①〜③と支援内容→「支援内容・手立て」欄に記載する。
+// 既存の利用者（TA / 記録対象者）に追加。同じ短期目標が既にあれば追加しない。一度だけ実行。
+(function seedSupportGoal() {
+  const FLAG = 'isp_seed_goal_v1';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const target = DB.users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  if (!target) { try { localStorage.setItem(FLAG, '1'); } catch (e) {} return; }
+
+  const longGoal = '施設に慣れ、通所し続けられる。関わる人に気持ちを伝えることができる。';
+  const longSupport = '施設・スタッフ・他の利用者との関わりを積み重ねることで安心感を育み、通所継続につなげる。気持ちを伝える場面を日常的に設け、自己表現の力を引き出す。';
+  const shortGoal = '環境や関わる人に慣れ、施設に通う頻度を増やしていく。';
+  const support =
+    '① めいと利用時にさらにできることを増やす。\n' +
+    '　→ 言葉の意味や数、概念等が伝わるような会話や絵本等を使用する。\n' +
+    '② 様々な手指を使ったあそびや勉強、レクリエーションに取り組むことができる。\n' +
+    '　→ 様々な新しい課題に取り組みたいと思える環境設定をする。あそびや機能訓練の中で、手や腕、手首のひねりなどを引き出せるものを見つける。\n' +
+    '③ 自分の気持ちを詳しく相手に伝えることができる。\n' +
+    '　→ わかりやすい質問や会話を通して本人の気持ちを引き出す。その場で適切な言葉を伝えるようにする。';
+
+  const goals = DB.goals;
+  const exists = goals.some(g => g.userId === target.id && (g.short || '').trim() === shortGoal);
+  if (!exists) {
+    goals.push({
+      id: uid(),
+      userId: target.id,
+      long: longGoal,
+      longSupport: longSupport,
+      short: shortGoal,
+      support: support,
+      start: '',
+      end: '',
+      staff: '和田',
+      progress: 0,
+      memo: '支援目標シート（手書き・IMG_4840）より取り込み。①〜③は短期目標の具体的支援内容。'
+    });
+    DB.goals = goals;
+  }
+
+  // 取り込んだ支援目標をすぐ確認できるよう、対象者を選択し表示先を支援目標画面にする
+  selectedUserId = target.id;
+  currentPage = 'goals';
+
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// 既存の支援目標レコードに longSupport を追記するパッチ（一度だけ実行）
+(function patchGoalLongSupport() {
+  const FLAG = 'isp_patch_goal_longsupport_v1';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+  const shortGoal = '環境や関わる人に慣れ、施設に通う頻度を増やしていく。';
+  const longSupport = '施設・スタッフ・他の利用者との関わりを積み重ねることで安心感を育み、通所継続につなげる。気持ちを伝える場面を日常的に設け、自己表現の力を引き出す。';
+  const goals = DB.goals;
+  let patched = false;
+  goals.forEach(g => {
+    if ((g.short || '').trim() === shortGoal && !g.longSupport) {
+      g.longSupport = longSupport;
+      patched = true;
+    }
+  });
+  if (patched) DB.goals = goals;
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 既存日誌を支援目標に紐付け（一度だけ実行） =====================
+// 手書き記録から取り込んだ43件の日誌に goalId が設定されていないため、
+// 利用者TAの唯一の支援目標へ一括紐付けする。手動で goalId が設定済みの記録は上書きしない。
+(function linkDiariesToGoal() {
+  const FLAG = 'isp_link_diaries_goal_v1';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const target = DB.users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  if (!target) { try { localStorage.setItem(FLAG, '1'); } catch (e) {} return; }
+
+  const goals = DB.goals.filter(g => g.userId === target.id);
+  if (!goals.length) { try { localStorage.setItem(FLAG, '1'); } catch (e) {} return; }
+
+  const goalId = goals[0].id;
+  const diaries = DB.diaries;
+  let n = 0;
+  diaries.forEach(d => {
+    if (d.userId === target.id && !d.goalId) { d.goalId = goalId; n++; }
+  });
+  if (n) DB.diaries = diaries;
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 支援日誌の文章整形（文字起こしの精査・修正） =====================
+// 手書き記録からの文字起こしが断片的で文章になっていない記録が多かったため、
+// 介護職目線で意味を変えない範囲で読みやすい文章に整える。どうしても読み取れない箇所は
+// 前後の文脈から想定できる内容を補った（要確認箇所は別途利用者へ案内）。
+// 既存データ(localStorage)も対象。日付で照合し本文(content)のみ更新。
+// ピックアップ状態・評価・担当者などはそのまま維持する。一度だけ実行。
+(function refineDiaryText() {
+  const FLAG = 'isp_fix_text_v1';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  // 日付 → 精査・修正後の支援内容（読みやすく整えた文章）
+  const DIARY_TEXT = {
+    '2026-01-19': '本日も課題に向かう姿勢が見られ、職員が忙しい時でも、自分から早めにビーズタワーの課題に取り組むことができていた。',
+    '2026-01-20': 'バス停近くから送迎を利用。「学校が楽しかった。校外活動もある」と学校の予定を自分から伝えてくれた。やりたいことは今後家で決めて行うと話し、「めいさんとする」と返答があった。',
+    '2026-01-21': '「来月、○○さんが来る日に誕生日会をする？」と話し、先の予定（再来週のことなど）もよく理解している様子だった。',
+    '2026-01-23': '校外活動明けの登所。バス停まで迎えに行った。今日あったことをお友達に伝え、職員にお祝いの会（ハッピーパーティ）を開いてもらって、うれしそうにしていた。',
+    '2026-02-02': 'バス停から帰る時、「バスで長く座りすぎてしまう」ことを気にする様子が見られた。校外活動やバス下校への不安を、職員が和らげるよう関わった。本日は以前住んでいた家（前の家）へ行く予定で、出かけられることを楽しみにしていた。',
+    '2026-02-03': '新しいお友達へ自己紹介をした。自分から「自己紹介する」と言い、名前を伝えることができた。少し恥ずかしそうにしながらも、しっかり伝えられていた。明日の予定についても職員に自分から伝えてくれた。',
+    '2026-02-04': '校外活動のためバス停まで迎えに行った。「学校に行く。今日は○○先生がお休み」と、今日の予定を自分から伝えてくれた。',
+    '2026-02-06': 'ビーズタワーの課題で、使うビーズを自分の目で選んで取り組んだ。制作活動にも少し取り組むことができた。見本を見せると、それを手がかりにどんどん速く作ることができていた。',
+    '2026-02-08': 'うさぎの型はめを家でもやったとのことで、到着するとそのことを教えてくれた。見本に合わせるよう促すと、色と形を自分で確認してから型にはめることができている。河田先生の運動の時間には、ストレッチなどに笑顔で取り組んでいた。',
+    '2026-03-01': '職員が話題を交えて関わると笑顔が多く、意欲的に取り組めていた。声をかけるとうれしそうな表情を見せる。OT（作業療法）では職員が終わるまで「大丈夫だよ」と声をかけ続けたことで、最後まで楽しく取り組むことができた。',
+    '2026-03-02': '登所してまず一日の目標を立てた。登校できなかった理由は「YouTubeを見たから」と話す。「明日は学校に行ける」とのことだった。',
+    '2026-03-03': '物語を説明したあとに、その内容について問題を出した。答えられないこともあるが、少しずつ正確に答えられるようになってきている。',
+    '2026-03-04': 'バス停まで迎えに行った。学校の話題になると「学校に行きたい」「三送会（卒業を送る会）の準備をしている」などと話し、笑顔が見られた。',
+    '2026-03-06': '物語を聞いたあとの問題で、自分の間違いに気づくことができた。うさぎの型はめは、難しい見本でもスムーズに行えるようになっている。',
+    '2026-03-09': '初めての新しいパズルに取り組んだ。最初は「やめておく」と言っていたが、職員が「できるよ」と励ますとやる気を見せた。取り組む途中でも、形をよく見ながら集中して取り組むことができた。',
+    '2026-03-10': '座る場所の変更を事前に伝えると、スムーズに受け入れ「ここでいい」と話した。河田先生に対して、自分から「ありがとう」と言うことができた。',
+    '2026-03-11': 'バス停で、今日どの順番で到着するかをあらかじめ考えてきており、お友達への対応についても自分から職員に伝えることができた。',
+    '2026-03-13': 'トイレでトイレットペーパーが無いことに気づき、慌てずに、すぐ職員へ自分から伝えることができた。',
+    '2026-03-16': '散歩でバス停まで歩いた。お友達に近づこうとする場面を見守る。「ピンクの花だね」と職員から話題を伝えると関心を示し、お友達に声をかける間も笑顔が見られた。',
+    '2026-03-17': '本日の課題で車椅子の操作に取り組んだ。みんなで遊ぼうとお友達を呼びに行く場面を見守る。職員が声をかける前に「お休みだね」と自分から反応する様子があり、少しずつ気持ちが伝わるよう、お互いに気を配って関わった。',
+    '2026-03-18': '「久しぶりだね。来月はどこかへ出かける？」などと職員が話しかけると応じていた。散歩中やバスの車内から外の景色を見て、「分かるよ」と答えながら楽しんで過ごせていた。',
+    '2026-03-20': '母とのふれあいが少なく、さびしそうな様子が見られた。職員が声をかけてもうまく言葉が出ず、不安そうにする場面があった。それでも声をかけ続けると、「朝の会でお友達に伝える」と話せる時もあった。',
+    '2026-03-23': '散歩中、職員が話題を交えると気軽に挨拶ができた。うどん屋では緊張が高い様子だったため、落ち着けるようテーブル席を利用した。食べる前のあいさつのポーズや、決められた場所に物を入れることを理解しており、職員と簡単なやり取りをしながら過ごせていた。',
+    '2026-03-24': '花などの飾りつけの話題には意欲を示し、少し手伝うことができた。ただし本心ではやや消極的な様子もうかがえ、周囲の人を気にしながら取り組んでいた。',
+    '2026-03-25': '花を貼る課題に取り組んだ。「一人でやってみよう」と伝えると自分から取り組もうとし、お友達に「手伝ってほしい」と伝えようとする場面もあった。散歩からの帰り際や、お店の話題になると、はっきりした言葉が増え、情緒も安定していた。',
+    '2026-03-27': '「昨日お母さんが来た？」と職員（和田）に尋ねてくる。和田から少し離れた場所にいても、「お母さんなのに」と言いながら、繰り返し和田を探して近づいてくる様子があった。',
+    '2026-05-09': 'バス停まで迎えに行った。到着時にトイレの希望があり、すぐに排尿することができた。次に来るお友達のことを「○田くんだね」と笑顔で言い、職員に自分から話しかける場面もあった。',
+    '2026-05-18': '「課題が終わったらみんなで遊べる」と見通しを伝え、課題に取り組む時も職員が一緒に関わった。前回よりお友達へ近づいたり声をかけたりする場面が見られ、その様子を見守りながら、本人の思いが少しずつ伝わるよう関わった。',
+    '2026-05-19': '散歩に出かけた。挨拶の場面でも「○○だね」「○○して下さい」と、自分の気持ちや要求を言葉で表現することができた。',
+    '2026-05-20': 'お友達と同じテーブルになったため、すぐに「どう過ごすか」の目標を立てた。職員が見守る中、決められたとおりに場所や物を分け合うことができ、お互いを気にかけながら一緒にテーブルを使うことができていた。',
+    '2026-05-22': '自分から伝えようとする気持ちが見られ、「課題が分かるよ」など言葉数が多かった。カレンダーを開くと「お休みだね」と話し、みんなの前で身振り（ジェスチャー）を交えて表現する様子も見られた。',
+    '2026-05-25': 'ビーズタワーやストロー通しの課題に、とても意欲的に取り組んだ。お友達や職員に対して、自分から働きかけたり関わりを求めたりする行動も見られた。',
+    '2026-05-26': 'ビーズタワーを片付ける際、どこまで入っているかを確認しながらダンボール箱にしまった。カラーボールの色を職員が伝えながら一緒に片付けに取り組み、その様子をOT（作業療法士）も見守る場面があった。',
+    '2026-05-27': 'カラーリハビリの時間にも早めに準備して取り組むことができた。お友達と一緒に簡単な作業を行うこともできている。バス停で並んで待つ間、「○田さんだね」「お母さんだね」などと職員と話す場面もあった。',
+    '2026-06-01': '本日の活動（ステップ）に、とてもうれしそうに取り組んでいた。ビーズをつかむ作業もいきいきと行い、最後まで楽しくゲーム感覚で取り組むことができた。',
+    '2026-06-02': '「お友達はゴミ（片付け）をしてから、おやつを食べるよ」と本人に見通しを伝えることで、片付けに取り組むことができた。お友達へ自分から近づいたり声をかけたりする場面が、初めて少し見られた。',
+    '2026-06-03': '言葉が本来の内容とは少しずれることもあるが、「朝の会に入れて」と自分から話していた。トイレで自分から排尿することや、みんなと一緒に過ごすことに取り組んでいる。',
+    '2026-06-06': '個別課題に数多く取り組むことができた。前日に行った実習先での思いや気持ちを、職員に自分の言葉で伝えることもできた。',
+    '2026-06-09': 'めいさんと一緒に頭の体操を行うことを本人に伝えて取り組んだ。場面に応じて自分で考えて動こうとする様子が見られた。職員から促されると、笑顔を交えて言葉で応じることができた。',
+    '2026-06-10': '散歩に出かけることができた。「明日、学校に行く」と話す。お友達も交えて関わる中で言葉数が多くなった。バス停に着くと排尿してしまうことがあるが、トイレまで待つことや、自分から言葉で伝えてから向かうことができている。',
+    '2026-06-12': '母からのLINEの内容について職員とやり取りすると、聞き取れて応じられたのは2〜3回ほどだった。問いかけには答えていたが、全体に言葉数が少なく、やや体調・気分が優れない様子だった。',
+    '2026-06-14': '飾り付けの活動で、花の飾りについてお友達や職員に自分から表現する場面があり、普段より少しお友達と一緒に取り組むことができた。',
+    '2026-06-15': '「今日も楽しい」と自分の気持ち（うれしさ）を言葉で伝えながら、散歩に取り組むことができた。',
+    '2026-06-16': '職員が話しかけると応じてくれ、やり取りをする中で、こちらもうれしくなるような明るい表情・笑顔が見られた。'
+  };
+
+  const target = DB.users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  const diaries = DB.diaries;
+  let n = 0;
+  diaries.forEach(d => {
+    if (target && d.userId !== target.id) return;
+    if (DIARY_TEXT[d.date]) { d.content = DIARY_TEXT[d.date]; n++; }
+  });
+  DB.diaries = diaries;
+  try { if (n) console.info('[個別支援管理] 支援日誌 ' + n + ' 件の本文を整えました。'); } catch (e) {}
+
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 重複日誌のクリーンアップ（ピックアップ一覧のダブり対策） =====================
+// 同一利用者で「日付＋支援内容」が完全に一致する日誌が複数ある場合は1件に統合する。
+// 統合時はピックアップ状態・評価・担当者などの情報を失わないよう残す側へ引き継ぐ。
+// フラグは使わず毎回点検し、重複があった時だけ保存し直す（無ければ何もしない＝自己修復）。
+(function dedupeDiaries() {
+  const diaries = DB.diaries;
+  const seen = new Map();   // key -> 残す日誌レコード
+  const kept = [];
+  let removed = 0;
+  diaries.forEach(d => {
+    const key = [d.userId, d.date, (d.content || '').trim()].join('|');
+    if (seen.has(key)) {
+      // 既出と完全一致 → 残す側に情報を引き継ぎ、こちらは破棄
+      const keep = seen.get(key);
+      if (d.pickup) keep.pickup = true;
+      if (!keep.rating && d.rating) keep.rating = d.rating;
+      if (!keep.staff && d.staff) keep.staff = d.staff;
+      if (!keep.condition && d.condition) keep.condition = d.condition;
+      if (!keep.note && d.note) keep.note = d.note;
+      if (!keep.goalId && d.goalId) keep.goalId = d.goalId;
+      removed++;
+    } else {
+      seen.set(key, d);
+      kept.push(d);
+    }
+  });
+  if (removed > 0) {
+    DB.diaries = kept;
+    try { console.info('[個別支援管理] 重複していた日誌を ' + removed + ' 件、1件に統合しました。'); } catch (e) {}
+  }
+})();
+
+// ===================== TUさん 初期データ投入（手書き記録の取り込み） =====================
+// IMG_4842（3/17〜4/1）、IMG_4841（4/20〜5/4）、IMG_4840（6/17・支援目標）より取り込み。
+// 一度だけ実行。再読み込みしても重複登録しません。
+(function seedTUData() {
+  // フラグは使わず、「TU」がいなければ作り直す自己修復方式（削除済み・未投入の環境でも復旧する）
+  if (DB.users.some(u => (u.name || '').trim() === 'TU')) return;
+
+  // TUを作り直すので、後続の「正確版・補正」シードの実行フラグを消し、同じ読み込みで再適用させる
+  // （これをしないと古い文字起こしのまま復元されてしまう）
+  ['isp_seed_tu_v3','isp_fix_tu_goal_v2','isp_tu_review_v4']
+    .forEach(f => { try { localStorage.removeItem(f); } catch (e) {} });
+
+  const userId = uid();
+  const users = DB.users;
+  users.push({
+    id: userId, name: 'TU', kana: '', birth: '', gender: '',
+    level: '', service: '生活介護', office: '',
+    memo: '手書き支援記録（3月〜6月分）より取り込み。氏名は仮置きです。'
+  });
+  DB.users = users;
+
+  const STAFF = '和田';
+  const entries = [
+    // IMG_4842（3/17〜4/1）
+    { date: '2026-03-17', content: 'ゆっくり座る・乗り練習をした。「上手にできるんね」と声をかけると、細かくゆっくり座るよう伝えた。「ぶーぶーしていますか」「できましたね」など声をかけると応じていた。〔要確認〕' },
+    { date: '2026-03-18', content: 'ボンボン入れでリボン型やタイ型を作った。リボン型は見本通りに作ることができた。はじめの色を見ながら選べていた。お友達と玉入れを一緒に行い、ゆっくりボールを投げ合った。〔要確認〕' },
+    { date: '2026-03-23', content: '机仕事でちょうちょを作った。右手で押さえて左手を動かしながら花形を入方を3つとも作れていた。気になることがあると「○○先生に見せる」と言い、支援者に作ったものを見てもらっていた。〔要確認〕' },
+    { date: '2026-03-24', content: 'おでかけでライフへ行った。車内で気持ちが変わり、チョコ2種類・オレンジの野菜ジュース・ハイチュウをそれぞれ選んで買い、めいさんとともに全種類少しずつ食べて満足そうにしていた。〔要確認〕' },
+    { date: '2026-03-25', content: 'おでかけでライフへ行った。行き車中で「お弁当買う、からあげ」と言っていた。ライフにつくとすぐにからあげ弁当を見て「これにする」と自分で選んだ。食べたい物を支援者に自分から伝えることができた。〔要確認〕' },
+    { date: '2026-03-27', content: '食べ物の絵合わせカードを行った。「カレーに入っている野菜は？」など物をイメージする質問にも、考えながら答えることができていた。課題に集中して取り組む場面があった。〔要確認〕' },
+    { date: '2026-03-30', content: '花物を勧めるという課題に先行的に取り組んだ。新しい支援者がついたが、多く声をかけられると少しうんざりしてしまう様子も見られた。〔要確認〕' },
+    { date: '2026-03-31', content: '課題への意欲あり。自分で課題を選択するが、支援者が提示すると「できる」と言い取り組んだ。ボール渡しでは「こうどうぞ」とお友達へ手渡すことができた。〔要確認〕' },
+    { date: '2026-04-01', content: 'みんなでボール入れをする時は、対象者の指示に従い順番を守って出来ていた。活動の仕付けも声に出しながら取り組めた。〔要確認〕' },
+    // IMG_4841（4/20〜5/4）
+    { date: '2026-04-20', content: '手指の活動への意欲はあった。同様の流れで内容が次々と変わっても集中して取り組んでいた。家庭で姉さんとも一緒にいこうと試みていたとのこと。〔要確認〕' },
+    { date: '2026-04-21', content: '課題内容をお伝えしてから活動することで、きちんと取り組むことができた。取り組む場面が長く続いたことが確認できた。わかりにくいことを聞き取り伝えることが次の課題として残る。〔要確認〕' },
+    { date: '2026-04-22', content: '「どうして○○ちゃんが参加しないのか」と疑問を持ち支援者に尋ねた。学校が楽しい様子で「○○先生は誰？」と隣りの人の名前を聞こうとする場面も見られた。〔要確認〕' },
+    { date: '2026-04-24', content: '課題について意欲的だが、やや落ち着きにくい面があり、動き回る際に支援者の近くに来てしまうことがある。いけないとは分かっている様子で、声に出して自分に言い聞かせていた。〔要確認〕' },
+    { date: '2026-04-26', content: 'ボール遊びでは台に乗って立って行った。ゆっくり動くよう声をかけながら行い、転ばずに取り組めた。両手を使った活動に積極的に取り組んでいた。〔要確認〕' },
+    { date: '2026-04-27', content: 'ストロー通し・型はめに自分から取り組みたいと申し出て集中して取り組んだ。一つひとつ丁寧に課題を組み合わせて行い、意欲的に最後まで取り組んでいた。〔要確認〕' },
+    { date: '2026-04-28', content: '自信を持てずにいる場面があったが、できていることを伝えると課題への意欲が出た。意欲はあるが、うまくいかないとやや落ち込む様子もあった。〔要確認〕' },
+    { date: '2026-04-29', content: '課題にまずまず取り組んだ。食事前に「○○ちゃんは好き」など気持ちを言葉で表す場面が見られた。好きなキャラクターグッズを自分で選ぶことができ、それが自信につながってきている。〔要確認〕' },
+    { date: '2026-05-04', content: '好きなキャラクターグッズを自分で選ぶことでできることが自信になってきている。活動が終わると言葉で「終わった」と伝えようとする場面が増えてきた。〔要確認〕' },
+    // IMG_4840（6/17）
+    { date: '2026-06-17', content: '気持ち的に来所するのが恥ずかしそうな様子も見られたため、先に話しかけ、上手にできていることを認めながら関わった。肯定的な声かけを続けることで、意欲的に取り組む場面が増えてきた。〔要確認〕' }
+  ];
+
+  const diaries = DB.diaries;
+  entries.forEach(e => {
+    diaries.push({ id: uid(), userId, date: e.date, staff: STAFF, attend: '参加', content: e.content, condition: '', note: '', rating: '' });
+  });
+  DB.diaries = diaries;
+})();
+
+// ===================== TUさん 支援目標の取り込み（IMG_4853） =====================
+// フラグは使わず毎回点検し、同じ短期目標が無ければ補う自己修復方式。
+(function seedTUSupportGoal() {
+  const target = DB.users.find(u => (u.name || '').trim() === 'TU');
+  if (!target) return;
+
+  const goals = DB.goals;
+  const shortGoal = '新しい環境や支援者に慣れ、レクリエーション等に参加できる。';
+  const supportText =
+    '① 支援者との関係性をより深め、楽しく通所する。\n' +
+    '　→ 支援者と関わる機会を増やし、信頼関係を築く。\n' +
+    '② 自分の気持ちを支援者に伝えることができる。\n' +
+    '　→ ハンドサインを使用する。写真や絵カードが必要な場合は使用する。気持ちを汲み取り言葉にして返す。\n' +
+    '③ 手指を使ったあそびや勉強、レクリエーションに取り組むことができる。\n' +
+    '　→ 手指の巧緻性を養う。わかりやすいルールの中で楽しみながら取り組むような環境設定を行う。';
+  const longSupportText =
+    '特定の支援者に限らず、めいの支援者全員と関わる機会を日常的に設ける。一人ひとりとの関わりを少しずつ積み重ねることで、人や環境への慣れと信頼を広げ、誰が支援に入っても安心して通所・活動できる関係づくりを進める。';
+  if (!goals.some(g => g.userId === target.id && (g.short || '').trim() === shortGoal)) {
+    goals.push({
+      id: uid(), userId: target.id,
+      long: 'めいの支援者全員とのかかわり方を確立する。',
+      longSupport: longSupportText,
+      short: shortGoal,
+      support: supportText,
+      start: '', end: '', staff: '和田', progress: 0,
+      memo: '支援目標シート（手書き・IMG_4853）より取り込み。短期6か月／長期18か月。※長期手立ては原本に記載がないため当方で作成。'
+    });
+    DB.goals = goals;
+  }
+})();
+
+// ===================== TUさん 有効支援の自動ピックアップ =====================
+// 支援日誌のうち、職員の関わり（声かけ・見本・励まし・環境設定）が
+// 本人の前向きな変化（できた・自分から・笑顔・満足・初めての達成）につながったと
+// 判断した記録を「有効支援」としてピックアップする。
+// フラグは使わず毎回点検し、未設定があれば補う自己修復方式（既存の評価が付いた環境でも復旧する）。
+function pickupTUEffectiveSupport() {
+  const GOOD = new Set([
+    '2026-03-18', // 見本通りにリボン型作れた・友達と一緒に活動できた
+    '2026-03-23', // 花形3つとも達成・自分から「見せる」と言えた
+    '2026-03-24', // 自分でお菓子を選んで買い満足そうに食べた（外出×自己選択）
+    '2026-03-25', // 「これにする」と自分で選び食べたい物を自分から伝えた
+    '2026-03-31', // 初めて「こうどうぞ」とお友達へ手渡し（対人スキル初達成）
+    '2026-04-01', // 順番を守れた・仕付けを自分で声に出して取り組んだ
+    '2026-04-20', // 内容が変わっても手指活動への意欲と集中が続いた
+    '2026-04-22', // 隣の人の名前を聞こうとした（対人への積極的な関心）
+    '2026-04-27', // 自分から課題を申し出て最後まで集中（自主性＋集中力）
+    '2026-04-28', // 励ましを受けて意欲が出た（称賛の有効性確認）
+    '2026-04-29', // 気持ちを言葉で表す・自己選択で自信につながってきている
+    '2026-05-04', // 「終わった」と言葉で伝えようとする場面が増えた
+    '2026-06-17', // 肯定的な声かけを続けると意欲的に取り組む場面が増えた
+    // --- 正確版記録から追加で判断した有効支援（2月・3月前半・5月）---
+    '2026-02-05', // 支援者がそばに座ると集中が続く（存在による環境支援が有効）
+    '2026-03-05', // 具体的な声かけ＋ハンドサインで自立行動（身体を拭く・着席）
+    '2026-03-10', // 落ち着ける課題の組み合わせ・環境設定で自分のペースで楽しめ待てた
+    '2026-04-23', // トイレのサインが継続支援で定着・自分で考えて型はめ
+    '2026-05-07', // 好きな物（おやつ）を見せて気持ちを切り替えられた
+    '2026-05-19', // 待ち時間に手元活動（スピーズ入れ）を手渡すと笑顔で安定
+    '2026-05-28'  // 新しい支援者の声かけにも笑顔（短期目標「新しい支援者に慣れる」に直結）
+  ]);
+  const MID = new Set([
+    '2026-03-27', // 考えながら答えられたがやや不安定
+    '2026-04-21', // 長く続いたが達成の手ごたえがやや薄め
+    '2026-04-26'  // 積極的だが具体的な達成がやや不明確
+  ]);
+  const BAD = new Set([
+    '2026-03-30'  // 多く声かけられてうんざりする様子（支援の過多が裏目）
+  ]);
+
+  const target = DB.users.find(u => (u.name || '').trim() === 'TU');
+  if (!target) return;
+  const diaries = DB.diaries;
+  let changed = 0;
+  diaries.forEach(d => {
+    if (d.userId !== target.id) return;
+    // 評価が未設定なら補う（既存の評価は尊重して上書きしない）
+    if (!d.rating) {
+      if (GOOD.has(d.date))      d.rating = 'good';
+      else if (MID.has(d.date))  d.rating = 'mid';
+      else if (BAD.has(d.date))  d.rating = 'bad';
+      else                       d.rating = 'good';
+      changed++;
+    }
+    // GOOD該当日はピックアップ未設定なら必ず立てる（評価の有無に関わらず＝自己修復）
+    if (GOOD.has(d.date) && !d.pickup) { d.pickup = true; changed++; }
+  });
+  if (changed) DB.diaries = diaries;
+}
+pickupTUEffectiveSupport();
+
+// ===================== TUさん 日誌を支援目標に紐付け =====================
+// フラグは使わず毎回点検し、未紐付けの日誌があれば補う自己修復方式。
+(function linkTUDiariesToGoal() {
+  const target = DB.users.find(u => (u.name || '').trim() === 'TU');
+  if (!target) return;
+
+  const goals = DB.goals.filter(g => g.userId === target.id);
+  if (!goals.length) return;
+
+  const goalId = goals[0].id;
+  const diaries = DB.diaries;
+  let n = 0;
+  diaries.forEach(d => { if (d.userId === target.id && !d.goalId) { d.goalId = goalId; n++; } });
+  if (n) DB.diaries = diaries;
+})();
+
+// ===================== TUさん 記録の取り込み・正確版（IMG_4850〜4853を再読込） =====================
+// IMG_4852（2/5〜3/1）、IMG_4851（3/5〜5/19）、IMG_4850/4853（5/28〜6/25）をフル解像度で読み直した正確版。
+// 旧版（v2）の文字起こしに誤りがあったため、日付ごとに内容を上書き更新する。
+// 読み取れない語は「？」、判断が割れる箇所は〔？〕で明示。推測での創作はしない。
+// 新しいフラグ(v3)で、既存データにも一度だけ正確版を適用する。
+(function seedTUData2() {
+  const FLAG = 'isp_seed_tu_v3';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  // 既存のTUさんを使用。無ければ作成（フォールバック）。
+  let target = DB.users.find(u => (u.name || '').trim() === 'TU');
+  if (!target) {
+    const users = DB.users;
+    target = { id: uid(), name: 'TU', kana: '', birth: '', gender: '',
+      level: '', service: '生活介護', office: '',
+      memo: '手書き支援記録（IMG_4850〜4853）より取り込み。氏名は仮置きです。' };
+    users.push(target);
+    DB.users = users;
+  }
+
+  const STAFF = '和田';
+  const entries = [
+    // IMG_4852（2/5〜3/1）
+    { date: '2026-02-05', content: 'おやつ準備中も、遊びの待ち時間はスピーズ入れをくり返し行っている。支援者が席に座る時にも集中しているが、いないとフタを？んでとり出すこともある。' },
+    { date: '2026-02-08', content: '呼び鈴のおもちゃを支援者に渡して引っぱりっこ？をくり返し楽しんでいる。その他、スピーズ入れやストロー入れにも意欲的に取り組む。河田先生のOTでは前半はリラックスしてストロー入れを行っていた。？集中することもあり。' },
+    { date: '2026-02-18', content: '関わりの中で、課題を通してたくさんスタッカーを使って？を楽しむことがある。おやつの取り分けをすると協力している。おやつは2杯？ずつ食べ終える。' },
+    { date: '2026-02-26', content: '「終わり」を「行こう」のアクションとしてスタッフに伝えようとする様子あり。制作の際に手元をよく見て集中して作業に取り組んでいる。細かく切った？をつまんだり、？と写真の選択では自らの写真をよく見ていた。' },
+    { date: '2026-03-01', content: 'スピーズ入れやベルトボールのサイン入れをくり返し行い、行っている間に？集中していることもある。OT中も比較的リラックスした状態で受けることができている。' },
+    // IMG_4851（3/5〜5/19）
+    { date: '2026-03-05', content: 'トイレのハンドサインを出す（出ていなくてもサインを出すことあり）。「○○さんは身体を拭いてね」と伝えると自ら身体を拭く。ベルトのハンドサインも出しつつ、スムーズに席に着く。' },
+    { date: '2026-03-10', content: '手指を使う活動を、少し興奮ぎみだが落ち着いて取り組めるよう組み合わせて行うことがあった。あるあそびを支援者と一緒にやってみて、自分なりのスピードで楽しめていた。ネット遊び中もスピーズ入れをしながら待つことができている。' },
+    { date: '2026-03-12', content: 'ネットあそびの後、スピーズ入れなどに移って取り組んだ。物を渡されてもすぐに片付けず、支援者のやり方を真似して取り組む様子であった。' },
+    { date: '2026-04-16', content: 'トイレのサインを出してネット遊びを希望する。ネット遊び中は、ベルトボールのサイン入れをしながらワイワイとできている。' },
+    { date: '2026-04-23', content: 'トイレのサインを出して、ようやくトイレに入った？。そのサインを覚えてきており、今後も継続したい。型はめ・形入れを？回行うと、自分なりに考えてできていた。声かけや身体を動かして取り組むことも複数回あった（車イスを？）。' },
+    { date: '2026-04-30', content: '河田先生のOTあり？。下肢のストレッチなどを行う。スピーズをしながら体を動かして取り組めている。ストロー入れは色を支援者が分けながら？すると、集中して入れている。〔日付は4/26か4/30か要確認〕' },
+    { date: '2026-05-07', content: 'めいでの来所時。元気がなかったが、持参のおやつを見せると手に取って動けるようになった。いつものように元気を取り戻し、おやつも完食できた。' },
+    { date: '2026-05-17', content: 'スピーズ入れやストロー入れは、ひとつずつ手渡すと入れるが、時々手元を見ていない時もある。OTのストレッチもリラックスして受けており、腕をしっかり伸ばす。おやつの途中で食べることをやめ、「おしまい」のジェスチャーをすることもあった？。' },
+    { date: '2026-05-19', content: 'ネット遊び支援中にスピーズ入れを手渡すと、それをやりながら笑顔が絶えることなく過ごすことができる。' },
+    // IMG_4850 / IMG_4853（5/28〜6/25）
+    { date: '2026-05-28', content: '新しい支援者の声かけにも笑顔でこたえていた。始めたお茶を完食し、その後トイレへ。今回も？。' },
+    { date: '2026-06-11', content: '日曜日に通る話？・制作の完成（半分）を見て「分かった」「まかせて」と言えるなど、手応えがあった。' },
+    { date: '2026-06-14', content: 'ボール運び。返す相手をよく見つけて？渡せた。制作では好みの色を選んで、？の色を入れていた。前の人？と分かっていた。' },
+    { date: '2026-06-18', content: 'OTのときにも指示通りにできていた。「車イスに乗って」ですぐ乗れた（もたれかかり）。' },
+    { date: '2026-06-25', content: 'おやつはチョコを選び、おかわりは器？や仕草のまね？をして食事もよくとれた。制作では3色の中から2つの色を、思った物を選んでいた。' }
+  ];
+
+  // TUさんの支援目標があれば日誌に紐付ける
+  const tuGoal = DB.goals.find(g => g.userId === target.id);
+  const goalId = tuGoal ? tuGoal.id : undefined;
+
+  // 日付ごとに upsert（同日付があれば内容を正確版で上書き、無ければ追加）
+  const diaries = DB.diaries;
+  let updated = 0, added = 0;
+  entries.forEach(e => {
+    const found = diaries.find(d => d.userId === target.id && d.date === e.date);
+    if (found) {
+      found.content = e.content;
+      if (goalId && !found.goalId) found.goalId = goalId;
+      updated++;
+    } else {
+      diaries.push({ id: uid(), userId: target.id, date: e.date, staff: STAFF,
+        attend: '参加', content: e.content, condition: '', note: '', rating: '',
+        ...(goalId ? { goalId } : {}) });
+      added++;
+    }
+  });
+  DB.diaries = diaries;
+  try { console.info('[個別支援管理] TUさんの記録を正確版に更新（上書き ' + updated + ' 件 / 追加 ' + added + ' 件）。'); } catch (e) {}
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== TUさん 支援目標の補正（IMG_4852/4853で正） =====================
+// 旧データ（IMG_4840由来）の短期目標が誤っていたため、既存のTU目標を正しい内容に上書き。
+// 一度だけ実行。
+(function fixTUGoal() {
+  const FLAG = 'isp_fix_tu_goal_v2';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const target = DB.users.find(u => (u.name || '').trim() === 'TU');
+  if (!target) { try { localStorage.setItem(FLAG, '1'); } catch (e) {} return; }
+
+  const correctShort = '新しい環境や支援者に慣れ、レクリエーション等に参加できる。';
+  const correctLong = 'めいの支援者全員とのかかわり方を確立する。';
+  // 短期手立て：最新シート（IMG_4853）の3項目
+  const correctSupport =
+    '① 支援者との関係性をより深め、楽しく通所する。\n' +
+    '　→ 支援者と関わる機会を増やし、信頼関係を築く。\n' +
+    '② 自分の気持ちを支援者に伝えることができる。\n' +
+    '　→ ハンドサインを使用する。写真や絵カードが必要な場合は使用する。気持ちを汲み取り言葉にして返す。\n' +
+    '③ 手指を使ったあそびや勉強、レクリエーションに取り組むことができる。\n' +
+    '　→ 手指の巧緻性を養う。わかりやすいルールの中で楽しみながら取り組むような環境設定を行う。';
+  // 長期手立て：原本に記載がないため、長期目標に沿って当方で作成
+  const correctLongSupport =
+    '特定の支援者に限らず、めいの支援者全員と関わる機会を日常的に設ける。一人ひとりとの関わりを少しずつ積み重ねることで、人や環境への慣れと信頼を広げ、誰が支援に入っても安心して通所・活動できる関係づくりを進める。';
+
+  const goals = DB.goals;
+  let fixed = 0;
+  goals.forEach(g => {
+    if (g.userId !== target.id) return;
+    if ((g.memo || '').includes('次期計画')) return; // 次期計画の目標は補正対象外
+    g.short = correctShort;
+    g.long = correctLong;
+    g.support = correctSupport;
+    g.longSupport = correctLongSupport;
+    g.memo = '支援目標シート（手書き・IMG_4853）より取り込み。短期6か月／長期18か月。※長期手立ては原本に記載がないため当方で作成。';
+    fixed++;
+  });
+  if (fixed) DB.goals = goals;
+  try { console.info('[個別支援管理] TUさんの支援目標（手立て含む）を ' + fixed + ' 件、最新内容に更新しました。'); } catch (e) {}
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== TAさん 記録の補正（IMG_4479の誤読を正す） =====================
+// 旧 seed v1 は「IMG_4479」とされていたが、実際のIMG_4479は2/16〜3/1の記録（ビーズタワー・型はめ等）。
+// 旧版は内容も日付も誤って「3/16〜3/27の散歩記録」として登録されていたため、
+// 誤りの9件を削除し、正確に読み直した2/16〜3/1の9件に置き換える。一度だけ実行。
+// 読み取れない語は「？」、判断が割れる箇所は〔？〕で明示。推測での創作はしない。
+(function fixTADataFromPdf() {
+  const FLAG = 'isp_fix_ta_v2';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const target = DB.users.find(u => ['TA', '記録対象者'].includes((u.name || '').trim()));
+  if (!target) { try { localStorage.setItem(FLAG, '1'); } catch (e) {} return; }
+
+  // 誤って登録された旧 seed v1 の日付（TAさんの該当分のみ削除）。
+  // これらの日付はTAさんでは v1 のみが使用しており、他のseed(v2〜v4)とは重複しないため日付一致で安全に除去できる。
+  const WRONG_DATES = new Set([
+    '2026-03-16','2026-03-17','2026-03-18','2026-03-20','2026-03-23',
+    '2026-03-24','2026-03-25','2026-03-27','2026-03-01'
+  ]);
+  let diaries = DB.diaries.filter(d => !(d.userId === target.id && WRONG_DATES.has(d.date)));
+
+  // 正確版（IMG_4479.pdf を再読込）2/16〜3/1
+  const STAFF = '和田';
+  const correct = [
+    { date: '2026-02-16', content: '登校しバス下校。到着すると課題へ向かい「ビーズタワーする」と支援者に伝える。荷物の確認などをしている間も、一人で集中できている。' },
+    { date: '2026-02-17', content: '今日行う課題を半分残しておいた。「自分で出来たら支援者を呼ぶように」と伝えると、集中して取り組み「出来ました」と支援者を呼ぶ。色合わせ（ボンボン）の修正は少し必要だが、意欲的。' },
+    { date: '2026-02-18', content: '「イチイチ先生？の来る日はどこでご飯食べる？」など気にする様子を支援者と確認する。登校・バス下校の花丸を見て「次の家いつ行ける？」と確認し、楽しみにしている。課題に集中している。' },
+    { date: '2026-02-20', content: '母とのふれあいが以前より増えているように感じた。スタッフの前では話さないことがあるが、自ら母に？すると言っていた。「今日学校で何した？」に「朝の会して音楽した」と伝えられていた。' },
+    { date: '2026-02-23', content: '集中して課題に取り組む。うさぎの型はめは、入れない部分にマークをつけることで取り組めている。食べる前のポーズやボール入れでルールを理解し、順番を行うこともできている。' },
+    { date: '2026-02-24', content: '花丸を貯めるため課題への意欲が高いが、少し難易度が上がる課題では支援者の助言を要することもあり。やや無関心な人？が気になっている様子あり。' },
+    { date: '2026-02-25', content: '花丸を貯めるため課題に取り組む。「一人で取り組むこと」を伝えたことや、支援者に？してほしいと伝えたことをやろうとすることあり。前の家への散歩や、めいとで昼ご飯を食べる日があるなど、自ら予定の確認をする。' },
+    { date: '2026-02-27', content: '「昨日○○をつくった？」など昨日のことを支援者へよく話している。本日、前の家へ散歩に行く。嬉しそうに出かけ「○枚つくると10枚行った？」と覚えていると話している。' },
+    { date: '2026-03-01', content: '課題に集中し、花丸を貯めようとしている。課題を完成させ「出来ました」と伝える前に、自ら考え戻してしまうことが何度かあり。OTは始まる頃から「河田先生今日来る？」と気にしており、楽しんで取り組めている。' }
+  ];
+  correct.forEach(e => {
+    const found = diaries.find(d => d.userId === target.id && d.date === e.date);
+    if (found) { found.content = e.content; }
+    else {
+      diaries.push({ id: uid(), userId: target.id, date: e.date, staff: STAFF,
+        attend: '参加', content: e.content, condition: '', note: '', rating: '' });
+    }
+  });
+  DB.diaries = diaries;
+  try { console.info('[個別支援管理] TAさんの誤記録をIMG_4479正確版に置き換えました。'); } catch (e) {}
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== TUさん 振り返り・評価の作成と未評価日誌への評価付与 =====================
+// 未評価の TU 日誌にまとめて評価を付け、各日誌の支援結果を「良好・普通・要支援」の
+// 3カテゴリーに分類した振り返り記録を1件作成する（v2）。
+// 既存環境では旧版（領域別構成）の自動生成文面を検出して置き換える。手動評価・手動編集は上書きしない。
+(function buildTUReviewAndEvaluation() {
+  const FLAG = 'isp_tu_review_v4';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const target = DB.users.find(u => (u.name || '').trim() === 'TU');
+  if (!target) { try { localStorage.setItem(FLAG, '1'); } catch (e) {} return; }
+
+  // 未評価の日誌に評価を付与（日付で判断）
+  const MID = new Set([
+    '2026-02-18','2026-03-12','2026-03-27',
+    '2026-04-16','2026-04-21','2026-04-26','2026-04-30','2026-05-17'
+  ]);
+  const BAD = new Set(['2026-03-30']);
+  const diaries = DB.diaries;
+  diaries.forEach(d => {
+    if (d.userId !== target.id || d.rating) return;
+    if (BAD.has(d.date))      d.rating = 'bad';
+    else if (MID.has(d.date)) d.rating = 'mid';
+    else                      d.rating = 'good';
+  });
+  DB.diaries = diaries;
+
+  // 旧版（領域別構成）の自動生成振り返りを除去して3分類構成に置き換える。
+  // 手動編集された振り返りは目印の文言を含まないため残る。
+  const OLD_TU_MARKERS = ['【手指課題・作業面】スピーズ入れ', '3カテゴリーに分類して振り返る', '■ 目標達成状況'];
+  let reviews = DB.reviews.filter(r => !(
+    r.userId === target.id &&
+    r.period === '2026年2月〜6月' &&
+    OLD_TU_MARKERS.some(m => (r.staffNote || '').includes(m))
+  ));
+
+  // 振り返り記録を1件作成（既存があれば追加しない）
+  if (!reviews.some(r => r.userId === target.id && r.period === '2026年2月〜6月')) {
+    reviews.push({
+      id: uid(),
+      userId: target.id,
+      date: today(),
+      period: '2026年2月〜6月',
+      selfNote:
+        '（職員による推察・日誌38件より）\n' +
+        '① スピーズ入れ・ストロー通し・型はめ・制作など手指を使う活動が好きで、集中して楽しめている。\n' +
+        '② 好きな活動中は笑顔が多く、自分のペースで取り組めることが安心につながっている。\n' +
+        '③ 外出先で自分で選んで買えたこと（3/24・3/25）や課題の達成（3/23）は、本人の満足・自信になっている。\n' +
+        '④ 新しい支援者にも笑顔で応じられるようになってきた（5/28）。環境への適応が進んでいると考えられる。\n' +
+        '⑤ 声かけが多すぎる場面（3/30）は本人にとって負担。ちょうどよい関わりの量を求めていると考えられる。',
+      staffNote:
+        '※A=達成／B=おおむね達成／C=一部達成／D=未達成／E=継続検討。日誌38件（IMG_4840〜4842・4850〜4853）より。' +
+        '判読不能箇所は「？」付きのため暫定評価。\n' +
+        '① 【長期目標】めいの支援者全員とのかかわり方を確立する。…評価：C' +
+        '（新しい支援者の声かけに笑顔＝5/28と広がりはあるが、声かけ過多が負担になる場面＝3/30もあり確立は途上。長期18か月の中間として継続）\n' +
+        '② 【短期目標】新しい環境や支援者に慣れ、レクリエーション等に参加できる。…評価：B' +
+        '（玉入れ＝3/18、ボール遊び＝4/26、ネット遊び＝4/16に継続参加。新しい支援者への慣れも進行＝5/28・6/17）\n' +
+        '③ 【具体的目標①】支援者との関係性をより深め、楽しく通所する。…評価：B' +
+        '（元気がない日も好きなおやつの提示で立て直し＝5/7。来所時の恥ずかしさも肯定的な声かけで意欲に＝6/17）\n' +
+        '④ 【具体的目標②】自分の気持ちを支援者に伝えることができる。…評価：B' +
+        '（トイレのハンドサイン定着＝3/5・4/23。「終わった」を伝えようとする増加＝5/4、「分かった」「まかせて」＝6/11、気持ちの言語化＝4/29）\n' +
+        '⑤ 【具体的目標③】手指を使ったあそびや勉強、レクリエーションに取り組むことができる。…評価：A' +
+        '（スピーズ入れ・ストロー通し・型はめ・制作に一貫して意欲的。自分から申し出て最後まで集中＝4/27。目標はほぼ達成）\n' +
+        '⑥ 【支援結果の分類◎良好29件】見本提示（3/18）、外出での自己選択（3/24・3/25）、初めてのお友達への手渡し（3/31）、' +
+        'ハンドサインによる意思疎通（3/5・4/23）、肯定的な声かけ・称賛（4/28・6/17）等の支援が、意欲・達成・意思表示につながった。\n' +
+        '⑦ 【支援結果の分類△普通8件】達成の手応えが薄い・やや不安定（3/27・4/21・4/26）、模倣の段階（3/12）、' +
+        '記録が断片的（2/18・4/16・4/30）、時々手元を見ていない（5/17）。\n' +
+        '⑧ 【支援結果の分類✗要支援1件】声かけが多すぎて負担（3/30）。支援量（声かけの間合い）の調整を支援チームで共有する。',
+      nextNote:
+        '① 手指課題（スピーズ・型はめ・制作）を継続し、新しい課題を段階的に導入する。\n' +
+        '② トイレのハンドサインを継続し、他の意思表示（空腹・嫌・もっとなど）もハンドサインや絵カードで拡充する。\n' +
+        '③ 支援者全員との関わりを意図的に設け、特定の支援者以外にも慣れていく機会を作る。\n' +
+        '④ 声かけは適切な量を意識し、多すぎると負担になることを支援チームで共有する。\n' +
+        '⑤ 友達との関わり（手渡し・順番・共同活動）をスモールステップで継続する。',
+      overall: 'B',
+      evaluator: '和田'
+    });
+  }
+  DB.reviews = reviews;
+
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// 正確版シード（seedTUData2）で後から追加された日誌にも、同じ読み込み内でピックアップ・評価を反映する
+// （従来は次回の読み込みまで反映されなかったため、ここで再点検する）
+pickupTUEffectiveSupport();
+
+// ===================== TUさんが消えていた場合の自動回復 =====================
+(function recoverMissingTU() {
+  const FLAG = 'isp_recover_tu_v1';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {} // 先にセットしてリロードループ防止
+  const tuExists = DB.users.some(u => (u.name || '').trim() === 'TU');
+  if (tuExists) return;
+  // TUが存在しない → TU関連フラグをクリアしてリロード（次回ロードでTUシードが再実行される）
+  ['isp_seed_tu_v1','isp_seed_tu_v3','isp_seed_tu_goal_v1',
+   'isp_pickup_tu_v1','isp_link_tu_diaries_v1','isp_fix_tu_goal_v2','isp_tu_review_v4'
+  ].forEach(f => { try { localStorage.removeItem(f); } catch (e) {} });
+  console.info('[個別支援管理] TUさんが見つかりません。TUシードをリセットしてリロードします。');
+  location.reload();
+})();
+
+// ===================== TAさん 全日誌を原本PDFで正確に入れ直す（完全版） =====================
+// 過去のシードは①日付ミス②AI書き換え③推測埋めという問題があったため、
+// 全削除→PDF原本（IMG_4478/4479/4480/4489/4490）から読み取った内容に差し替える。
+// 読み取り不確実な語は【?】で明示。絶対に推測で埋めない。
+// ※IMG_4490（6月分）は回転撮影で読み取り困難なため【要確認:IMG_4490原本照合】を付与。
+// ※IMG_4491（5/8・5/9）は文字密集で読み取り不能なため省略（ユーザーが手入力を推奨）。
+(function fixTAAllFromPDF() {
+  const FLAG = 'isp_fix_ta_all_pdf_v4';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  // TA利用者を探す（名前が変わっていた場合も考慮して広めに検索）
+  const target = DB.users.find(u => {
+    const n = (u.name || '').trim();
+    return n === 'TA' || n === '記録対象者' || n.includes('TA');
+  });
+  if (!target) {
+    console.warn('[個別支援管理] fixTAAllFromPDF: TA利用者が見つかりません。users=', JSON.stringify(DB.users.map(u => u.name)));
+    try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+    return;
+  }
+  console.info('[個別支援管理] fixTAAllFromPDF: TA利用者発見 name=' + target.name + ' id=' + target.id);
+
+  // 既存TA日誌を全削除（誤ったシードデータ・AI書き換えテキストをすべて除去）
+  DB.diaries = DB.diaries.filter(d => d.userId !== target.id);
+
+  const taGoal = DB.goals.find(g => g.userId === target.id);
+  const goalId = taGoal ? taGoal.id : undefined;
+  const STAFF = '和田';
+
+  const entries = [
+    // ── IMG_4479.pdf より（1月19日〜2月8日） ─────────────────────────────
+    // ※表の上部に「支援の都合で登校はんで【?】、和から登校再開して 登校しバス停近ん」とある
+    { date: '2026-01-19', content: '① 「登校行って」など【スレべリ？】の学校行きツールを支援者に見させを求して伝えていた。おやつ後【？】3時間、課題に取り組むと完成あり' },
+    { date: '2026-01-20', content: '③ 「今日も学校行ったよ」と支援者に伝えている。支援者がバタバタしている中でも少し集中してビーズタワーに取り組めている。' },
+    { date: '2026-01-21', content: '③ バス停近んからの利用。「学校来たから放外活動ある」と登校の予定を伝える。校外の方針【？】も伝えられている。やりたいことシートは今後家でしていくこと【？】。本人も少し「めいとする」と返答あり。' },
+    { date: '2026-01-23', content: '③ 「頑張ったよ」と報告。「次めいさん来る日に誕生日会する？」と再来週の予定もよく分かっている様子。' },
+    { date: '2026-02-02', content: '（急変のため1週間休み後、登校しバス停近ん）③ 到着すると「学校行ったよ。今日【？】ちゃん誕生日」とお気に入りの友達に伝えている。支援者とお友達にハッピーバースデイを歌ってもらい嬉しそうにしている。' },
+    { date: '2026-02-03', content: '③ バス停から帰ってくる際「【嬉？】けいとさん来る？」と気にしていた。友達を気にする様子あり。登校。バス下校。花丸を貰い【？】、本日は前の家へ行く。行けることを楽しそうに支援者に話している。' },
+    { date: '2026-02-04', content: '③ 新しいお友達に自己紹介する人聞くと「自己紹介する【？】」と言い名前を伝えていた。クル【？】名前も【？】でいたが使いにて【？】覚えている。「明日も学校行く」と明日の予定を支援者へ伝えている。' },
+    { date: '2026-02-05', content: '（日付は「2/5.6」のため2日分）③ 「学校行ったよ。今日【3ヨシ？】先生休み」と今日の予定を伝える。② ビーズタワーを目的に【？】行い、制作もみんな取り組んだ。見本を見せると【？】や考えた。【文末不明:IMG_4479】' },
+    { date: '2026-02-08', content: '① うさぎの型はめを家でもしたとのことで、めい【？】に着くと教えてくれる。見本【ボード？】を見て合わせるように促すと手にとってパーツの色と形を確認してから見本に合わせてはめることができている。② 河田先生のOTあり。ストレッチや足底など【？】の姿勢で積極的に取り組んだりする。' },
+    // ── IMG_4478.pdf / 支援１ページ.pdf より（2月16日〜3月1日） ─────────────
+    { date: '2026-02-16', content: '登校しバス下校。到着すると課題へ向かい「ビーズタワーする」と支援者に伝える。荷物の確認などをしている間も、一人で集中できている。' },
+    { date: '2026-02-17', content: '今日行う課題を半分残しておいた。「自分で出来たら支援者を呼ぶように」と伝えると、集中して取り組み「出来ました」と支援者を呼ぶ。色合わせ（ボンボン）の修正は少し必要だが、意欲的。' },
+    { date: '2026-02-18', content: '「イチイチ先生【？】の来る日はどこでご飯食べる？」など気にする様子を支援者と確認する。登校・バス下校の花丸を見て「次の家いつ行ける？」と確認し、楽しみにしている。課題に集中している。' },
+    { date: '2026-02-20', content: '母とのふれあいが以前より増えているように感じた。スタッフの前では話さないことがあるが、自ら母に【？】すると言っていた。「今日学校で何した？」に「朝の会して音楽した」と伝えられていた。' },
+    { date: '2026-02-23', content: '集中して課題に取り組む。うさぎの型はめは、入れない部分にマークをつけることで取り組めている。食べる前のポーズやボール入れでルールを理解し、順番を行うこともできている。' },
+    { date: '2026-02-24', content: '花丸を貯めるため課題への意欲が高いが、少し難易度が上がる課題では支援者の助言を要することもあり。やや無関心な人【？】が気になっている様子あり。' },
+    { date: '2026-02-25', content: '花丸を貯めるため課題に取り組む。「一人で取り組むこと」を伝えたことや、支援者に【？】してほしいと伝えたことをやろうとすることあり。前の家への散歩や、めいとで昼ご飯を食べる日があるなど、自ら予定の確認をする。' },
+    { date: '2026-02-27', content: '「昨日【？】をつくった？」など昨日のことを支援者へよく話している。本日、前の家へ散歩に行く。嬉しそうに出かけ「【？枚つくると？】行った」と話している。' },
+    { date: '2026-03-01', content: '課題に集中し、花丸を貯めようとしている。課題を完成させ「出来ました」と伝える前に、自ら考え戻してしまうことが何度かあり。OTは始まる頃から「河田先生今日来る？」と気にしており、楽しんで取り組めている。' },
+    // ── IMG_4480.pdf より（3月2日〜3月16日） ─────────────────────────────
+    { date: '2026-03-02', content: '③ 【和は？】登校できる目処に。理由については「youtube見てからた【？】」と話し、「明日は学校行ける」とのこと。① 物語を聞いて後に問題を出す。初めに分からないこともあったが、正確に解が出てきている様子。' },
+    { date: '2026-03-03', content: '③ バス停近ん。めいとまどの間に学校の話をする。「学校行ったよ」「三送会【？】の【？】した」と発声あり。①② 課題中を終えると「できました」と支援者に伝える。' },
+    { date: '2026-03-04', content: '① 本日も物語を聞いて後に問題を出す。コンピュータ覚えるのは難しいこともあるようだが、正解を見せると「こっちやった【？】」と問題に気づくことができる。うさぎの型はめは、難しい見本でもスムーズに行える。' },
+    { date: '2026-03-06', content: '① アルファベットのパネル（初めて行う）をやってみようで手を入れる。はじめは「やめとく」と訴え「【変えなら？】できると思う」と伝えると、やる気になった。はじめてからは、途中でやめることもなく、形をよく見て取り組んでいる。ボタン【？】には半分は【？】外すと大まり【？】は行える。' },
+    { date: '2026-03-09', content: '①② 本より【？】、座る場所を変更することを伝える。スムーズに受け入れ「ここ良い。前回先生にありがとう言う」と話し「ありがとう」と言っている。' },
+    { date: '2026-03-10', content: '③ 昨日からベッドでの位置を変更したが、家でも話しているようで支援者も様子を見ている。課題を終えるとはじめる前に「出来ました」と確認を依頼するを【必要にて？】' },
+    { date: '2026-03-11', content: '③ バス停からめいとまどの間に支援者と一緒に今日の活動に何をするかを【見えて来た？】。支援者と他の支援者へ自ら伝えることができている。トイレ内【？】するのを待てず先に行ってしまい、待たなければいけない理由はできていた。' },
+    { date: '2026-03-13', content: '② トイレに入り、トイレットペーパーがある【センライン？】気付く、【サルタさにすが？】支援者に「トイレットペーパーを」と伝えることができた。その後も何度か「トイレペーパー」とも言っていたが説明すると分かっている様子だった。' },
+    { date: '2026-03-16', content: '②③ 車内で鼻水が出て【んに？】を前方から支援員に伝える。支援員の鞄の中を開け、自分の鞄の中からタオルを取り、拭くことができた。' },
+    // ── IMG_4489.pdf より（5月18日〜6月1日） ─────────────────────────────
+    { date: '2026-05-18', content: '①③ やるべき事を自らちゃんとやってくれる【？】。②が伝えるよとのこと、気付かれ、表情が明るくなり頑張ると応える。学校で【？】前の気持ちを伝える言おう【？】。一緒に考えると自分なりの言葉で【？】通じて確認した。' },
+    { date: '2026-05-19', content: '③ 落ち着いて【？】課題の取り組み。【○○しにり、○○して？】自分の気持ちを伝えた。' },
+    { date: '2026-05-20', content: '② 岡野先生のOTでサポート運動をする。みんなの見本で1人めの役割に行ってくれた。① ゆっくり1点つけるなど取り合わせばできる【？】' },
+    { date: '2026-05-24', content: '③ 学校で花丸をたくさん集めていて「学校で【何れの？】」と支援者が聞くと「体躯体験した【？】」と話す。① 短時間の間にビーズタワーもやり【文末不明:IMG_4489】' },
+    { date: '2026-05-25', content: '② ビーズタワーやストロー通しにとても意欲的に取り組む。わざと職員に【口要？】をかける行動が見られた。' },
+    { date: '2026-05-26', content: '③ ビーズタワーを片付けるダンボールが移動し、どこに【移したか？】カラーボールの○色が遠いとか困っていることを【はめあして？】案内していることが【了解？】' },
+    { date: '2026-05-27', content: '① カラーシールの暗記、6ますパズルの暗記もこれも集中して取り組んだ。3個暗記したら正確率が【じょじょう？】上がっている。' },
+    { date: '2026-05-29', content: 'バス停近ん。めいと到着時トイレ希望するが、既に排尿してしまっていた。「2回休んだら、次学校行ん【？】、薬飲んでから」と支援者に伝えた。' },
+    { date: '2026-06-01', content: '② 今日何をつかうことを考えて【ホウキャモ？】してそれは【？】。タクティルもやったことがする【？】ような、ので【？】ゲームをするような【文末不明:IMG_4489】' },
+    // ── IMG_4490.pdf より（6月2日〜6月16日） ─────────────────────────────
+    // ※IMG_4490は回転状態で撮影されており詳細な読み取りが困難。
+    // ※以下の内容は元の手書き原本（IMG_4490）との照合が必要です。【要確認:IMG_4490原本照合】
+    { date: '2026-06-02', content: '「友達はゴミ（片付け）をやって、おやつ食べる」と利用者へ伝えることでできている。お友達への接近や声かけが初めて少しできた様子を見せた。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-03', content: '言い換える言葉が内容と違うが「朝の会、お会へ入れて」と話す。自分のトイレで排尿することやみんなと過ごすことに取り組んでいる。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-06', content: '個別課題にたくさん取り組んだ。前日に行った実習先での思い・気持ちを職員に伝えることもできた。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-09', content: 'めいと一緒に頭の体操（場面）を行うと利用者へ伝える。両膝を保って指示する場面を判断する。スタッフから促されると笑顔を交えて言える。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-10', content: '散歩に行けた。「明日学校に行く」と話す。お友達も交えて言葉が多くなる。バス停まで到着すると排尿してしまうが、トイレを待ち言葉も話して行ってきている。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-12', content: 'LINEで母から来たことにコメントを伝え合うと、聞き取れたのが2〜3回。問いに答えている。話す数は少なく、やや調子が良くない。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-14', content: '飾り付けで、花さんもお友達や職員に表現していたので、普段より少しお友達と取り組めた。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-15', content: '今日も〜と自分の気持ち（うれしさ）を伝えながら散歩に取り組んだ。【要確認:IMG_4490原本照合】' },
+    { date: '2026-06-16', content: '〜と話すとこちらもうれしくなり、笑顔も見られた。【要確認:IMG_4490原本照合】' }
+  ];
+
+  const diaries = DB.diaries;
+  entries.forEach(e => {
+    diaries.push({
+      id: uid(), userId: target.id, date: e.date, staff: STAFF,
+      attend: '参加', content: e.content, condition: '', note: '', rating: '',
+      ...(goalId ? { goalId } : {})
+    });
+  });
+  DB.diaries = diaries;
+
+  try { console.info('[個別支援管理] TAさん全日誌をPDF原本から正確版に差し替え（' + entries.length + '件）。'); } catch (e) {}
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== TAさん 全日誌の評価（良好/普通/要支援） =====================
+// 支援員視点で各日の「目標への取り組み」を評価。読み取れた範囲で判断し、
+// 不確実箇所（【？】【要確認】）は判断材料にしない。明確な拒否・悪化の日は無かったため要支援は0。
+// 普通＝取り組めているが失敗・試し行動・不安定さ・読み取り断片が混在する日。それ以外は良好。
+// フラグは使わず毎回点検し、未評価の日だけ補う自己修復方式（手動で付けた評価は尊重して上書きしない）。
+(function rateTAAllDiaries() {
+  const MID = new Set([
+    '2026-02-24', // 難易度が上がると助言を要する／気になる様子
+    '2026-03-01', // 「出来ました」前に自ら戻してしまう場面が複数
+    '2026-03-10', // 位置変更の様子見・記録が断片的
+    '2026-03-11', // トイレを待てず先に行ってしまう
+    '2026-05-25', // 意欲的だが職員への試し行動
+    '2026-05-26', // 片付けで困る場面（支援で案内）
+    '2026-05-29', // トイレ希望前に既に排尿してしまう
+    '2026-06-01', // 内容が不明瞭・手応え薄め
+    '2026-06-03', // 言い換えの言葉が内容と食い違う
+    '2026-06-10', // バス停で排尿してしまう（改善傾向だが失敗あり）
+    '2026-06-12'  // 話す数が少なくやや調子が良くない
+  ]);
+  const BAD = new Set([]); // 明確な拒否・悪化の日は読み取れず
+  const target = DB.users.find(u => {
+    const n = (u.name || '').trim();
+    return n === 'TA' || n === '記録対象者' || n.includes('TA');
+  });
+  if (!target) return;
+  const diaries = DB.diaries;
+  let changed = 0;
+  diaries.forEach(d => {
+    if (d.userId !== target.id || d.rating) return; // 既存評価は尊重
+    d.rating = MID.has(d.date) ? 'mid' : (BAD.has(d.date) ? 'bad' : 'good');
+    changed++;
+  });
+  if (changed) DB.diaries = diaries;
+})();
+
+// ===================== TAさん 有効支援の自動ピックアップ =====================
+// 支援員視点で「職員の関わり（見本提示・課題設定の工夫・励まし・事前説明・見通し提示）が
+// 本人の前向きな変化（自分でできた・要求や気持ちを言葉で伝えられた・対人の初達成）に
+// つながった」と判断した記録を有効支援としてピックアップする。
+// フラグは使わず毎回点検し、未設定があれば補う自己修復方式。
+// ※読み取り不確実箇所（【？】【要確認】）は判断材料にせず、読み取れた範囲で選定。
+(function pickupTAEffectiveSupport() {
+  const PICK = new Set([
+    '2026-02-08', // 見本ボードを提示し促すと、色と形を確認して見本通りにはめられた
+    '2026-02-17', // 課題を半分残し「できたら呼んで」＝自立を促す設定で集中・達成
+    '2026-02-23', // 入らない所にマークをつける視覚的工夫で型はめに取り組めた
+    '2026-03-06', // 「やめとく」→「変えたらできる」の励ましで意欲を引き出せた
+    '2026-03-09', // 事前に説明して席変更をスムーズに受け入れ「ありがとう」と言えた
+    '2026-03-13', // トイレットペーパーがないと気づき自分から要求を言葉で伝えられた
+    '2026-03-16', // 鼻水を支援員に伝え、自分でタオルを取り対処できた
+    '2026-06-02', // 見通し（友達はゴミ→おやつ）を伝える支援で対人接近が初めて少しできた
+    '2026-06-06'  // 個別課題に取り組み、実習先での気持ちを職員に伝えられた
+  ]);
+  const target = DB.users.find(u => {
+    const n = (u.name || '').trim();
+    return n === 'TA' || n === '記録対象者' || n.includes('TA');
+  });
+  if (!target) return;
+  const diaries = DB.diaries;
+  let changed = 0;
+  diaries.forEach(d => {
+    if (d.userId !== target.id || !PICK.has(d.date)) return;
+    if (!d.pickup) { d.pickup = true; changed++; }
+    if (!d.rating) { d.rating = 'good'; changed++; } // 有効支援＝良好評価として補う（既存評価は尊重）
+  });
+  if (changed) DB.diaries = diaries;
+})();
+
+// ===================== 次期計画の策定（今期の振り返り・引き継ぎ事項より作成） =====================
+// 今期の振り返り評価記録（項目別評価・支援結果の3分類・次期への引き継ぎ課題）と
+// 有効支援ピックアップの情報をもとに、次期（2026年7月〜12月）の支援目標を作成して登録する。
+// 手立ては今期の支援目標シートと同じ「具体的目標①②③ → 支援内容」の対形式（v2）。
+// 同じ短期目標が既にあれば内容を更新（旧自動生成文のみ。手動編集済みは保護）。既存の今期目標は履歴として残す。
+(function seedNextPlanGoals() {
+  const FLAG = 'isp_seed_nextplan_v2';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const START = '2026-07-01', END = '2026-12-31';
+  let seeded = 0;
+
+  // ---- TAさん：今期評価 B/B/B/A/C（③気持ちを詳しく伝える＝C）を踏まえた次期計画 ----
+  const ta = DB.users.find(u => {
+    const n = (u.name || '').trim();
+    return n === 'TA' || n === '記録対象者' || n.includes('TA');
+  });
+  if (ta) {
+    const shortGoal =
+      '得意な手指課題を土台に自信を積み重ねながら、要求や気持ちを自分から言葉で伝える場面を増やす。';
+    const longGoal = '通所を安定して続けながら、関わる人に自分の気持ちや要求を場面に応じて伝えることができる。';
+    const longSupport =
+      '今期に有効と確認できた支援（見本提示・自立を促す課題設定・肯定的な励まし・事前説明と見通しの提示）を' +
+      '全職員で共有して継続し、伝えられた経験を積み重ねることで表現の幅を広げていく。';
+    const support =
+      '① 得意な手指課題や新しい課題に自分から取り組み、達成を積み重ねる。\n' +
+      '　→ ビーズタワー・型はめ・パズル・制作と、花丸による達成の見える化を継続し「達成→称賛→自信」のサイクルを回す。' +
+      '新しい課題は「できる」と伝える励ましと見本提示・マーキングで導入する（今期2/8・2/17・2/23・3/6で有効）。\n' +
+      '② 要求や気持ちを、自分から言葉で詳しく伝えることができる。\n' +
+      '　→ 活動の選択・出来事の報告・実習先の話題など、伝える機会を意図的に設ける。伝えられた時はその場で称賛し、' +
+      '「詳しく」広げる問いかけを添える（今期C評価の重点継続。3/13・3/16の援助要求を伸ばす）。' +
+      '排泄は早めの声かけ・トイレ誘導で「伝えてから行く」成功体験を増やす（今期3/11・5/29・6/10の課題）。\n' +
+      '③ お友達との関わりを少しずつ広げることができる。\n' +
+      '　→ 見通しの提示と支援者の仲立ちのもと、挨拶→接近→声かけ→簡単なやり取りのスモールステップで進める' +
+      '（今期6/2の芽生えを継続）。';
+    const memo =
+      '次期計画（2026年7月〜12月）。今期振り返り（総合評価B・具体的目標③がC評価）と次期への引き継ぎ事項、' +
+      '有効支援ピックアップ9件より作成。①〜③は短期目標の具体的目標と支援内容。' +
+      '6月分日誌【要確認:IMG_4490原本照合】および5/8・5/9（IMG_4491・未取込）の事実確認をチームで行った上で、' +
+      'サービス管理責任者が内容を確認・修正すること。';
+
+    const goals = DB.goals;
+    const existing = goals.find(g => g.userId === ta.id && (g.short || '').trim() === shortGoal);
+    if (existing) {
+      // v1の自動生成文（④項目を含む番号列挙形式）のみ対形式へ更新。手動編集済みは保護。
+      if ((existing.support || '').includes('④ 排泄は早めの声かけ')) {
+        existing.support = support; existing.long = longGoal;
+        existing.longSupport = longSupport; existing.memo = memo;
+        DB.goals = goals; seeded++;
+      }
+    } else {
+      goals.push({
+        id: uid(), userId: ta.id, long: longGoal, longSupport: longSupport,
+        short: shortGoal, support: support,
+        start: START, end: END, staff: '和田', progress: 0, memo: memo
+      });
+      DB.goals = goals; seeded++;
+    }
+  }
+
+  // ---- TUさん：今期評価 C/B/B/B/A（長期＝C・支援量の調整が課題）を踏まえた次期計画 ----
+  const tu = DB.users.find(u => (u.name || '').trim() === 'TU');
+  if (tu) {
+    const shortGoal =
+      '意思表示の手段（ハンドサイン・言葉・絵カード）を広げながら、いろいろな支援者と楽しく活動できる。';
+    const longGoal = 'めいの支援者全員とのかかわり方を確立する。';
+    const longSupport =
+      '長期18か月の後半として継続。特定の支援者に偏らないよう関わりの機会を計画的に設け、' +
+      '本人に合う声かけの量・間合いを支援チーム全員で共有して、誰が支援に入っても安心できる関係を確立する。';
+    const support =
+      '① いろいろな支援者と楽しく活動することができる。\n' +
+      '　→ 支援者全員との関わりの機会を計画的に設ける（今期5/28の慣れの芽生えを継続）。声かけは量とタイミングを' +
+      '調整し、集中している時は見守りを基本とする（今期3/30で声かけ過多が負担＝要支援評価）。\n' +
+      '② 自分の気持ちや要求を伝える手段を広げることができる。\n' +
+      '　→ トイレのハンドサイン（今期3/5・4/23で定着）を継続し、「終わり」「もっと」「嫌」などの意思表示も' +
+      'サイン・絵カードで拡充する。伝えられた時は気持ちを汲み取り、言葉にして返す。\n' +
+      '③ 手指を使ったあそびや勉強、レクリエーションに取り組み続けることができる。\n' +
+      '　→ スピーズ入れ・ストロー通し・型はめ・制作を継続し、新しい課題は楽しみながら取り組める環境設定のもと' +
+      '段階的に導入する（今期A評価の具体的目標③を維持・発展）。';
+    const memo =
+      '次期計画（2026年7月〜12月）。今期振り返り（総合評価B・長期目標C評価）と次期への引き継ぎ事項、' +
+      '有効支援ピックアップ20件より作成。①〜③は短期目標の具体的目標と支援内容。' +
+      '判読不能箇所「？」の事実確認をチームで行った上で、サービス管理責任者が内容を確認・修正すること。';
+
+    const goals = DB.goals;
+    const existing = goals.find(g => g.userId === tu.id && (g.short || '').trim() === shortGoal);
+    if (existing) {
+      if ((existing.support || '').includes('④ 声かけは量とタイミングを調整する')) {
+        existing.support = support; existing.long = longGoal;
+        existing.longSupport = longSupport; existing.memo = memo;
+        DB.goals = goals; seeded++;
+      }
+    } else {
+      goals.push({
+        id: uid(), userId: tu.id, long: longGoal, longSupport: longSupport,
+        short: shortGoal, support: support,
+        start: START, end: END, staff: '和田', progress: 0, memo: memo
+      });
+      DB.goals = goals; seeded++;
+    }
+  }
+
+  // 作成した次期目標をすぐ確認できるよう、支援目標画面を開く（TAさんを選択）
+  if (seeded && ta) { selectedUserId = ta.id; currentPage = 'goals'; }
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// 初期表示：自動処理で対象画面が指定されていればそれを開く（無ければ利用者一覧）
+if (selectedUserId && currentPage !== 'users') {
+  showPage(currentPage);
+} else {
+  renderPage('users');
+}
+</script>
+</body>
+</html>
