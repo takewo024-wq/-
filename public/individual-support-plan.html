@@ -97,6 +97,21 @@ body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; font-size: 15px; back
 .support-item-body { font-size: 12px; color: #555; line-height: 1.6; white-space: pre-wrap; }
 .support-plain { font-size: 12px; color: #666; line-height: 1.6; white-space: pre-wrap; margin-top: 4px; }
 
+/* 振り返り評価：短期目標の項目ごとの入力・表示 */
+.review-item-edit { border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fafaf7; }
+.review-item-edit-head { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 8px; line-height: 1.5; }
+.review-item-edit .form-group { margin-bottom: 8px; }
+.review-item-edit .form-group:last-child { margin-bottom: 0; }
+.review-item-edit label { font-size: 11px; }
+.review-item-edit textarea { min-height: 50px; font-size: 12px; }
+.review-item-card { border: 1px solid #eee; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+.review-item-card:last-child { margin-bottom: 0; }
+.review-item-head { font-size: 13px; font-weight: 700; color: #2c2c2a; margin-bottom: 8px; line-height: 1.5; }
+.review-item-row { display: grid; grid-template-columns: 108px 1fr; gap: 10px; font-size: 12px; line-height: 1.6; margin-top: 6px; }
+.review-item-row:first-of-type { margin-top: 0; }
+.review-item-label { flex-shrink: 0; font-weight: 600; color: #888; }
+.review-item-value { color: #444; white-space: pre-wrap; }
+
 /* モーダル */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
@@ -369,13 +384,16 @@ body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; font-size: 15px; back
       <div class="form-group"><label>評価期間</label><input type="text" id="rv-period" placeholder="例: 2025年4月〜6月"></div>
     </div>
     <div class="form-row single">
-      <div class="form-group"><label>目標達成状況（本人評価）</label><textarea id="rv-self" placeholder="本人が感じている達成感・変化など"></textarea></div>
+      <div class="form-group">
+        <label>関連する短期目標</label>
+        <select id="rv-goal" onchange="renderReviewItemFields()"><option value="">— 短期目標を選択 —</option></select>
+      </div>
     </div>
-    <div class="form-row single">
-      <div class="form-group"><label>目標達成状況（職員評価）</label><textarea id="rv-staff" placeholder="職員から見た達成状況・成長した点"></textarea></div>
-    </div>
-    <div class="form-row single">
-      <div class="form-group"><label>次期計画への引き継ぎ・課題</label><textarea id="rv-next" placeholder="次期の支援計画に向けた課題・継続事項"></textarea></div>
+    <div class="form-row single" style="margin-bottom:6px">
+      <div class="form-group" style="margin-bottom:0">
+        <label>目標達成状況・次期への引き継ぎ（①②③の項目ごと）</label>
+        <div id="rv-items-container"></div>
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -890,7 +908,7 @@ function renderNextPlan(c) {
             <div style="margin-top:14px;padding-top:12px;border-top:1px solid #eee">
               <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">最新振り返り（${esc(latestReview.date)}）</div>
               ${latestReview.overall ? `<div style="font-size:12px;font-weight:600;color:${ovColor[latestReview.overall]||'#444'};margin-bottom:4px">総合評価: ${ovMap[latestReview.overall]||''}</div>` : ''}
-              ${latestReview.staffNote ? `<div style="font-size:12px;color:#555;line-height:1.6">${esc(latestReview.staffNote)}</div>` : ''}
+              ${renderReviewFieldItemized(latestReview, 'staff')}
             </div>` : ''}
         </div>
       </div>
@@ -900,7 +918,7 @@ function renderNextPlan(c) {
         <div class="card">
           <div class="card-header"><h3>📌 次期への引き継ぎ事項</h3></div>
           <div class="card-body">
-            ${latestReview?.nextNote ? `<div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${esc(latestReview.nextNote)}</div>` : '<div style="font-size:12px;color:#aaa">振り返り記録の「次期計画への引き継ぎ・課題」が表示されます</div>'}
+            ${latestReview ? renderReviewFieldItemized(latestReview, 'next', '振り返り記録の「次期計画への引き継ぎ・課題」が表示されます') : '<div style="font-size:12px;color:#aaa">振り返り記録の「次期計画への引き継ぎ・課題」が表示されます</div>'}
           </div>
         </div>
         <div class="card">
@@ -1060,12 +1078,19 @@ function renderReview(c) {
         ${reviews.length ? reviews.map(r => {
           const ovMap = { A:'✓ 目標達成', B:'◎ おおむね達成', C:'△ 一部達成', D:'✗ 未達成', E:'→ 継続検討' };
           const ovColor = { A:'green', B:'green', C:'amber', D:'red', E:'' };
-          return `<div style="padding:14px 18px;border-bottom:1px solid #eee;cursor:pointer" onclick="openEditReviewModal('${r.id}')">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          const items = reviewItems(r);
+          return `<div style="padding:14px 18px;border-bottom:1px solid #eee">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer" onclick="openEditReviewModal('${r.id}')">
               <div><span class="date-badge">${r.date||''}</span> <span style="font-size:12px;color:#888;margin-left:8px">${esc(r.period||'')}</span></div>
               ${r.overall?`<span class="tag ${ovColor[r.overall]||''}">${ovMap[r.overall]||r.overall}</span>`:''}
             </div>
-            ${r.staffNote?`<div style="font-size:13px;color:#444">${esc(r.staffNote.substring(0,80))}${r.staffNote.length>80?'…':''}</div>`:''}
+            ${items.length ? items.map(it => `
+              <div class="review-item-card" style="cursor:pointer" onclick="openEditReviewModal('${r.id}')">
+                ${it.text ? `<div class="review-item-head">${it.num?esc(it.num)+' ':''}${esc(it.text)}</div>` : ''}
+                ${it.self?`<div class="review-item-row"><span class="review-item-label">本人評価</span><div class="review-item-value">${esc(it.self)}</div></div>`:''}
+                ${it.staff?`<div class="review-item-row"><span class="review-item-label">職員評価</span><div class="review-item-value">${esc(it.staff)}</div></div>`:''}
+                ${it.next?`<div class="review-item-row"><span class="review-item-label">次期引き継ぎ</span><div class="review-item-value">${esc(it.next)}</div></div>`:''}
+              </div>`).join('') : '<div style="font-size:12px;color:#aaa;cursor:pointer" onclick="openEditReviewModal(\'' + r.id + '\')">評価内容が未入力です</div>'}
             ${r.evaluator?`<div style="font-size:11px;color:#888;margin-top:4px">評価者: ${esc(r.evaluator)}</div>`:''}
           </div>`;
         }).join('') : '<div style="padding:20px;text-align:center;color:#aaa;font-size:13px">振り返り記録がまだありません</div>'}
@@ -1078,6 +1103,8 @@ function openAddReviewModal() {
   clearReviewForm();
   document.getElementById('review-delete-btn').style.display = 'none';
   document.getElementById('rv-date').value = today();
+  populateReviewGoalSelect('');
+  renderReviewItemFields([]);
   openModal('review-modal');
 }
 function openEditReviewModal(id) {
@@ -1087,17 +1114,17 @@ function openEditReviewModal(id) {
   document.getElementById('review-delete-btn').style.display = '';
   document.getElementById('rv-date').value = r.date || '';
   document.getElementById('rv-period').value = r.period || '';
-  document.getElementById('rv-self').value = r.selfNote || '';
-  document.getElementById('rv-staff').value = r.staffNote || '';
-  document.getElementById('rv-next').value = r.nextNote || '';
   document.getElementById('rv-overall').value = r.overall || '';
   document.getElementById('rv-evaluator').value = r.evaluator || '';
+  populateReviewGoalSelect(r.goalId || '');
+  renderReviewItemFields(reviewItems(r));
   openModal('review-modal');
 }
 function clearReviewForm() {
-  ['rv-date','rv-period','rv-self','rv-staff','rv-next','rv-overall','rv-evaluator'].forEach(id => {
+  ['rv-date','rv-period','rv-overall','rv-evaluator'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
+  reviewItemsState = [];
 }
 function saveReview() {
   const date = document.getElementById('rv-date').value;
@@ -1105,7 +1132,7 @@ function saveReview() {
   const reviews = DB.reviews;
   const data = {
     userId: selectedUserId, date, period: v('rv-period'),
-    selfNote: v('rv-self'), staffNote: v('rv-staff'), nextNote: v('rv-next'),
+    goalId: v('rv-goal'), items: reviewItemsState.map(it => ({ ...it })),
     overall: v('rv-overall'), evaluator: v('rv-evaluator')
   };
   if (editingId) {
@@ -1190,6 +1217,74 @@ function renderSupportText(text) {
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function today() { return new Date().toISOString().slice(0,10); }
+
+// ===================== 振り返り評価：短期目標の項目ごとの記録 =====================
+// 指定した支援目標の短期手立てを①②③…単位に分解し、振り返り入力の土台（num, text）を作る。
+// 手立てが箇条書きされていなければ、短期目標そのものを1項目として扱う。
+function getGoalReviewItems(goalId) {
+  const g = DB.goals.find(x => x.id === goalId);
+  if (!g) return [];
+  const parsed = splitNumberedItems(g.support);
+  if (parsed) return parsed.map(it => ({ num: it.num, text: it.body }));
+  if ((g.short || '').trim()) return [{ num: '', text: g.short }];
+  return [];
+}
+// 振り返り記録から項目別の評価配列を得る。新形式（items）があればそれを、
+// 旧形式（selfNote/staffNote/nextNote の単一テキスト）しかなければ1項目に変換して返す。
+function reviewItems(r) {
+  if (r.items && r.items.length) return r.items;
+  if (r.selfNote || r.staffNote || r.nextNote) {
+    return [{ num: '', text: '', self: r.selfNote || '', staff: r.staffNote || '', next: r.nextNote || '' }];
+  }
+  return [];
+}
+function populateReviewGoalSelect(selectedGoalId) {
+  const sel = document.getElementById('rv-goal');
+  if (!sel) return;
+  const goals = DB.goals.filter(g => g.userId === selectedUserId);
+  sel.innerHTML = '<option value="">— 短期目標を選択 —</option>' +
+    goals.map(g => `<option value="${g.id}"${g.id === selectedGoalId ? ' selected' : ''}>${esc(g.short.substring(0,30))}${g.short.length > 30 ? '…' : ''}</option>`).join('');
+}
+let reviewItemsState = [];
+function renderReviewItemFields(existingItems) {
+  const goalId = document.getElementById('rv-goal').value;
+  const base = goalId ? getGoalReviewItems(goalId) : [];
+  const prevList = existingItems || reviewItemsState || [];
+  reviewItemsState = base.length
+    ? base.map((b, i) => {
+        const prev = prevList.find(e => e.num === b.num && e.text === b.text) || prevList[i] || {};
+        return { num: b.num, text: b.text, self: prev.self || '', staff: prev.staff || '', next: prev.next || '' };
+      })
+    : prevList.map(it => ({ ...it }));
+
+  const c = document.getElementById('rv-items-container');
+  if (!reviewItemsState.length) {
+    c.innerHTML = '<div style="font-size:12px;color:#aaa;padding:4px 0">短期目標を選択すると、①②③の項目ごとに評価を入力できます</div>';
+    return;
+  }
+  c.innerHTML = reviewItemsState.map((it, i) => `
+    <div class="review-item-edit">
+      <div class="review-item-edit-head">${it.num ? esc(it.num) + ' ' : ''}${esc(it.text || '（全体）')}</div>
+      <div class="form-group has-voice"><label>目標達成状況（本人評価）</label><textarea id="rv-item-self-${i}" oninput="syncReviewItem(${i},'self',this.value)" rows="2">${esc(it.self)}</textarea></div>
+      <div class="form-group has-voice"><label>目標達成状況（職員評価）</label><textarea id="rv-item-staff-${i}" oninput="syncReviewItem(${i},'staff',this.value)" rows="2">${esc(it.staff)}</textarea></div>
+      <div class="form-group has-voice"><label>次期計画への引き継ぎ・課題</label><textarea id="rv-item-next-${i}" oninput="syncReviewItem(${i},'next',this.value)" rows="2">${esc(it.next)}</textarea></div>
+    </div>
+  `).join('');
+  addVoiceBtns(c);
+}
+function syncReviewItem(i, field, value) {
+  if (reviewItemsState[i]) reviewItemsState[i][field] = value;
+}
+// 振り返り記録から、特定フィールド（self/staff/next）を項目ごとに分けて表示するHTML片を作る。
+function renderReviewFieldItemized(r, field, emptyMessage) {
+  const items = reviewItems(r).filter(it => (it[field] || '').trim());
+  if (!items.length) return emptyMessage ? `<div style="font-size:12px;color:#aaa">${emptyMessage}</div>` : '';
+  return items.map(it => `
+    <div class="review-item-card" style="padding:8px 10px;margin-bottom:6px">
+      ${it.text ? `<div class="review-item-head" style="font-size:12px;margin-bottom:4px">${it.num ? esc(it.num) + ' ' : ''}${esc(it.text.substring(0,50))}${it.text.length>50?'…':''}</div>` : ''}
+      <div class="review-item-value" style="font-size:12px">${esc(it[field])}</div>
+    </div>`).join('');
+}
 
 // 紐付いた日誌の評価から達成度を自動計算（良好=100, 普通=50, 要支援=0 の平均）
 // 評価が代表的でない場合は null を返す（→手動値にフォールバック）。
