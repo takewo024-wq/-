@@ -1088,9 +1088,9 @@ function renderReview(c) {
             ${items.length ? items.map(it => `
               <div class="review-item-card" style="cursor:pointer" onclick="openEditReviewModal('${r.id}')">
                 ${it.text ? `<div class="review-item-head">${it.num?esc(it.num)+' ':''}${esc(it.text)}</div>` : ''}
-                ${it.self?`<div class="review-item-row"><span class="review-item-label">本人評価</span><div class="review-item-value">${esc(it.self)}</div></div>`:''}
-                ${it.staff?`<div class="review-item-row"><span class="review-item-label">職員評価</span><div class="review-item-value">${esc(it.staff)}</div></div>`:''}
-                ${it.next?`<div class="review-item-row"><span class="review-item-label">次期引き継ぎ</span><div class="review-item-value">${esc(it.next)}</div></div>`:''}
+                ${it.self?`<div class="review-item-row"><span class="review-item-label">本人評価</span><div class="review-item-value">${renderSupportText(it.self)}</div></div>`:''}
+                ${it.staff?`<div class="review-item-row"><span class="review-item-label">職員評価</span><div class="review-item-value">${renderSupportText(it.staff)}</div></div>`:''}
+                ${it.next?`<div class="review-item-row"><span class="review-item-label">次期引き継ぎ</span><div class="review-item-value">${renderSupportText(it.next)}</div></div>`:''}
               </div>`).join('') : '<div style="font-size:12px;color:#aaa;cursor:pointer" onclick="openEditReviewModal(\'' + r.id + '\')">評価内容が未入力です</div>'}
             ${r.evaluator?`<div style="font-size:11px;color:#888;margin-top:4px">評価者: ${esc(r.evaluator)}</div>`:''}
           </div>`;
@@ -1297,7 +1297,7 @@ function renderReviewFieldItemized(r, field, emptyMessage) {
   return items.map(it => `
     <div class="review-item-card" style="padding:8px 10px;margin-bottom:6px">
       ${it.text ? `<div class="review-item-head" style="font-size:12px;margin-bottom:4px">${it.num ? esc(it.num) + ' ' : ''}${esc(it.text.substring(0,50))}${it.text.length>50?'…':''}</div>` : ''}
-      <div class="review-item-value" style="font-size:12px">${esc(it[field])}</div>
+      <div class="review-item-value" style="font-size:12px">${renderSupportText(it[field])}</div>
     </div>`).join('');
 }
 
