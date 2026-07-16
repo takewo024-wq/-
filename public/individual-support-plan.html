@@ -1133,7 +1133,8 @@ function saveReview() {
   const data = {
     userId: selectedUserId, date, period: v('rv-period'),
     goalId: v('rv-goal'), items: reviewItemsState.map(it => ({ ...it })),
-    overall: v('rv-overall'), evaluator: v('rv-evaluator')
+    overall: v('rv-overall'), evaluator: v('rv-evaluator'),
+    _autoReviewItems: false // 手動保存された時点で自動変換の対象から外す
   };
   if (editingId) {
     const i = reviews.findIndex(x => x.id === editingId);
@@ -2737,17 +2738,20 @@ pickupTUEffectiveSupport();
 // 旧版の振り返り記録は職員評価を一つのテキストにまとめていたが、その中には
 // 【具体的目標①】〜【具体的目標③】として、短期目標の手立て①〜③に対応する評価が
 // 個別に書かれている。この対応関係を検出し、短期目標の項目数（①②③）に一致する場合に限り
-// items（項目別記録）へ変換する。長期目標の評価や支援結果の分類など、
-// どの項目にも対応しない内容は「総合」項目としてまとめ、データを失わないようにする。
+// items（項目別記録）へ変換する。長期目標の評価など、どの項目にも対応しない内容は
+// 「総合」項目としてまとめる。【支援結果の分類】（良好／普通／要支援の件数集計）は
+// 「有効支援ピックアップ」機能と重複するため不要と判断し、変換時に除外する。
+// このスクリプトによる自動変換結果には _autoReviewItems の目印を付け、
+// ロジック更新時（フラグ v2 以降）に安全に再変換できるようにする。
 (function migrateReviewItemsFromLegacyStaffNote() {
-  const FLAG = 'isp_migrate_review_items_v1';
+  const FLAG = 'isp_migrate_review_items_v2';
   try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
 
   const reviews = DB.reviews;
   let migrated = 0;
 
   reviews.forEach(r => {
-    if (r.items && r.items.length) return; // 既に項目化済み
+    if (r.items && r.items.length && !r._autoReviewItems) return; // 手動で作成・編集済みのものは触らない
     const staffNote = r.staffNote || '';
     const parsed = splitNumberedItems(staffNote);
     if (!parsed) return;
@@ -2760,13 +2764,13 @@ pickupTUEffectiveSupport();
     const specific = parsed.filter(p => /^【具体的目標/.test(p.body));
     if (specific.length !== goalItems.length) return; // 件数が一致しない場合は自動変換しない
 
-    const others = parsed.filter(p => !/^【具体的目標/.test(p.body));
+    const others = parsed.filter(p => !/^【具体的目標/.test(p.body) && !/^【支援結果の分類/.test(p.body));
     const overallStaff = others.map(p => p.num + ' ' + p.body).join('\n');
 
     const items = [];
     if (overallStaff || r.selfNote || r.nextNote) {
       items.push({
-        num: '', text: '総合（長期目標の評価・支援結果の傾向など）',
+        num: '', text: '総合（長期目標の評価など）',
         self: r.selfNote || '', staff: overallStaff, next: r.nextNote || ''
       });
     }
@@ -2780,6 +2784,7 @@ pickupTUEffectiveSupport();
 
     r.goalId = goal.id;
     r.items = items;
+    r._autoReviewItems = true;
     migrated++;
   });
 
