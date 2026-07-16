@@ -1246,16 +1246,29 @@ function populateReviewGoalSelect(selectedGoalId) {
     goals.map(g => `<option value="${g.id}"${g.id === selectedGoalId ? ' selected' : ''}>${esc(g.short.substring(0,30))}${g.short.length > 30 ? '…' : ''}</option>`).join('');
 }
 let reviewItemsState = [];
-function renderReviewItemFields(existingItems) {
+// 現在選択中の短期目標の項目に、既存の入力内容（あれば）を突き合わせる。
+// 目標の項目に対応しない内容（例: 長期目標の評価など、旧データ由来の「総合」項目）は
+// 先頭に残したまま保持し、編集時にデータが消えないようにする。
+function buildReviewItems(existingItems) {
   const goalId = document.getElementById('rv-goal').value;
   const base = goalId ? getGoalReviewItems(goalId) : [];
-  const prevList = existingItems || reviewItemsState || [];
-  reviewItemsState = base.length
-    ? base.map((b, i) => {
-        const prev = prevList.find(e => e.num === b.num && e.text === b.text) || prevList[i] || {};
-        return { num: b.num, text: b.text, self: prev.self || '', staff: prev.staff || '', next: prev.next || '' };
-      })
-    : prevList.map(it => ({ ...it }));
+  const prevList = (existingItems || reviewItemsState || []).map(it => ({ ...it }));
+  if (!base.length) return prevList;
+
+  const used = new Array(prevList.length).fill(false);
+  const mapped = base.map(b => {
+    const idx = prevList.findIndex((e, i) => !used[i] && e.num === b.num && e.text === b.text);
+    if (idx >= 0) {
+      used[idx] = true;
+      return { num: b.num, text: b.text, self: prevList[idx].self || '', staff: prevList[idx].staff || '', next: prevList[idx].next || '' };
+    }
+    return { num: b.num, text: b.text, self: '', staff: '', next: '' };
+  });
+  const leftover = prevList.filter((e, i) => !used[i]);
+  return leftover.concat(mapped);
+}
+function renderReviewItemFields(existingItems) {
+  reviewItemsState = buildReviewItems(existingItems);
 
   const c = document.getElementById('rv-items-container');
   if (!reviewItemsState.length) {
@@ -2717,6 +2730,63 @@ pickupTUEffectiveSupport();
 
   // 作成した次期目標をすぐ確認できるよう、支援目標画面を開く（TAさんを選択）
   if (seeded && ta) { selectedUserId = ta.id; currentPage = 'goals'; }
+  try { localStorage.setItem(FLAG, '1'); } catch (e) {}
+})();
+
+// ===================== 振り返り記録の職員評価を短期目標の項目へ再割当て =====================
+// 旧版の振り返り記録は職員評価を一つのテキストにまとめていたが、その中には
+// 【具体的目標①】〜【具体的目標③】として、短期目標の手立て①〜③に対応する評価が
+// 個別に書かれている。この対応関係を検出し、短期目標の項目数（①②③）に一致する場合に限り
+// items（項目別記録）へ変換する。長期目標の評価や支援結果の分類など、
+// どの項目にも対応しない内容は「総合」項目としてまとめ、データを失わないようにする。
+(function migrateReviewItemsFromLegacyStaffNote() {
+  const FLAG = 'isp_migrate_review_items_v1';
+  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+
+  const reviews = DB.reviews;
+  let migrated = 0;
+
+  reviews.forEach(r => {
+    if (r.items && r.items.length) return; // 既に項目化済み
+    const staffNote = r.staffNote || '';
+    const parsed = splitNumberedItems(staffNote);
+    if (!parsed) return;
+
+    const goal = DB.goals.find(g => g.userId === r.userId && (g.short || '').trim() && staffNote.includes(g.short.trim()));
+    if (!goal) return;
+    const goalItems = getGoalReviewItems(goal.id);
+    if (!goalItems.length) return;
+
+    const specific = parsed.filter(p => /^【具体的目標/.test(p.body));
+    if (specific.length !== goalItems.length) return; // 件数が一致しない場合は自動変換しない
+
+    const others = parsed.filter(p => !/^【具体的目標/.test(p.body));
+    const overallStaff = others.map(p => p.num + ' ' + p.body).join('\n');
+
+    const items = [];
+    if (overallStaff || r.selfNote || r.nextNote) {
+      items.push({
+        num: '', text: '総合（長期目標の評価・支援結果の傾向など）',
+        self: r.selfNote || '', staff: overallStaff, next: r.nextNote || ''
+      });
+    }
+    goalItems.forEach((gi, i) => {
+      items.push({
+        num: gi.num, text: gi.text, self: '',
+        staff: specific[i].body.replace(/^【具体的目標[^】]*】/, '').trim(),
+        next: ''
+      });
+    });
+
+    r.goalId = goal.id;
+    r.items = items;
+    migrated++;
+  });
+
+  if (migrated) {
+    DB.reviews = reviews;
+    try { console.info('[個別支援管理] 振り返り記録 ' + migrated + ' 件を短期目標の項目別評価に変換しました。'); } catch (e) {}
+  }
   try { localStorage.setItem(FLAG, '1'); } catch (e) {}
 })();
 
