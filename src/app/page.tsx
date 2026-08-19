@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { employeeList, employees, EmployeeId } from "@/lib/employees";
 
 interface ChatMessage {
@@ -16,11 +17,18 @@ const initialThreads: Threads = employeeList.reduce((acc, e) => {
 }, {} as Threads);
 
 export default function Home() {
+  const router = useRouter();
   const [activeId, setActiveId] = useState<EmployeeId>(employeeList[0].id);
   const [threads, setThreads] = useState<Threads>(initialThreads);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   const activeEmployee = employees[activeId];
   const messages = threads[activeId];
@@ -58,8 +66,14 @@ export default function Home() {
   return (
     <div className="flex flex-1 h-full">
       <aside className="w-64 shrink-0 border-r border-black/10 dark:border-white/10 flex flex-col">
-        <div className="p-4 border-b border-black/10 dark:border-white/10">
+        <div className="p-4 border-b border-black/10 dark:border-white/10 flex items-center justify-between gap-2">
           <h1 className="font-semibold text-lg">🏢 AI社員の会社</h1>
+          <button
+            onClick={handleLogout}
+            className="text-xs opacity-60 hover:opacity-100 underline shrink-0"
+          >
+            ログアウト
+          </button>
         </div>
         <nav className="flex-1 overflow-y-auto">
           {employeeList.map((e) => (
