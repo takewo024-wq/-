@@ -6,6 +6,10 @@ Obsidian固有の記法（frontmatter・ウィキリンク・callout）や、
 公開しないセクション（🔗 リンク／📝 執筆メモ）もここで取り除く。
 
   python3 scripts/md2note.py "obsidian/古事記をよむ/ヤマトタケル 熊曾建討伐.md"
+
+保管庫の中のノートを直接指定してもよい。出力先は -o で変えられる。
+
+  python3 scripts/md2note.py ~/vault/古事記をよむ/記事.md -o ~/Desktop
 """
 import re
 import sys
@@ -68,11 +72,17 @@ def convert(text: str) -> str:
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
+    args = sys.argv[1:]
+    out_dir = Path("exports")
+    if "-o" in args:
+        i = args.index("-o")
+        out_dir = Path(args[i + 1]).expanduser()
+        del args[i : i + 2]
+    if not args:
         sys.exit(__doc__)
-    src = Path(sys.argv[1])
-    dest = Path("exports") / (src.stem + ".note.txt")
-    dest.parent.mkdir(exist_ok=True)
+    src = Path(args[0]).expanduser()
+    dest = out_dir / (src.stem + ".note.txt")
+    dest.parent.mkdir(parents=True, exist_ok=True)
     result = convert(src.read_text(encoding="utf-8"))
     dest.write_text(result, encoding="utf-8")
     chars = len(re.sub(r"\s", "", result))
