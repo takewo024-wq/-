@@ -63,3 +63,48 @@ Claudeに渡す運用でも問題ありません。
 | テンプレートフォルダ = `_templates` | 設定 → テンプレート | 新記事をワンクリックで作れる |
 | Dataviewプラグイン | コミュニティプラグイン | MOCの連載一覧が自動生成される |
 | プロパティ表示をON | 設定 → エディタ | frontmatterがカード表示になる |
+
+## WordPress（自己ホスト）に自動投稿する
+
+`scripts/wp_publish.py` で、Obsidianのノートを直接 WordPress へ
+下書き保存・公開できます（REST API + アプリケーションパスワード）。
+
+### セットアップ（最初の1回だけ）
+
+```bash
+pip3 install -r requirements.txt
+cp .env.example .env
+```
+
+`.env` を開いて `WP_URL` / `WP_USER` / `WP_APP_PASSWORD` を書く。
+アプリケーションパスワードの作り方は `.env.example` のコメント参照。
+`.env` は `.gitignore` 済みなので、コミットされたり他人に見えたりしません。
+
+### 使い方
+
+```bash
+# 変換結果を確認するだけ（投稿しない）
+python3 scripts/wp_publish.py "obsidian/古事記をよむ/ヤマトタケル 熊曾建討伐.md" --dry-run
+
+# 下書きとして投稿（既定）
+python3 scripts/wp_publish.py "obsidian/古事記をよむ/ヤマトタケル 熊曾建討伐.md"
+
+# 公開する
+python3 scripts/wp_publish.py "obsidian/古事記をよむ/ヤマトタケル 熊曾建討伐.md" --publish
+```
+
+一度投稿すると、記事ファイルのfrontmatterに `wp_post_id` が書き戻されます。
+同じファイルをもう一度実行すると、新規投稿ではなく**その投稿を上書き更新**します。
+
+### frontmatterでの制御（任意）
+
+```yaml
+wp_category: 古事記解説   # カテゴリー名（無ければ自動作成）
+wp_tags:                  # WordPress用タグ。無指定なら tags から流用
+  - ヤマトタケル
+  - 熊曾
+wp_status: draft          # draft / publish（コマンドの --publish が優先）
+```
+
+`tags`（Obsidian整理用）をそのまま使うと `note記事` のようなメタタグが
+混ざるため、`wp_tags` が無い場合は自動で除外されます。
