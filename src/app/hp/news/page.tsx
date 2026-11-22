@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { CONTAINER, NEWS } from "../_lib/site";
 import { SiteHeader, SiteFooter, PageHeader } from "../_components/site-chrome";
@@ -21,6 +22,17 @@ export default function NewsListPage() {
         />
 
         <section className={`${CONTAINER} py-14 md:py-20`}>
+          {/* イラスト（仮） */}
+          <div className="relative mb-10 aspect-[16/5] overflow-hidden rounded-3xl bg-brand-tint2 ring-1 ring-brand/15">
+            <Image
+              src="/hp-media/news.png"
+              alt="封筒や吹き出しをあしらったお知らせのイラスト（仮）"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1100px"
+              className="object-cover"
+            />
+          </div>
           <ul className="divide-y divide-black/5 border-y border-black/5">
             {NEWS.map((n) => (
               <li key={n.slug}>

@@ -216,20 +216,33 @@ function DailyFlow() {
             放課後等デイサービスの一日（例）
           </h2>
         </div>
-        <ol className="relative mx-auto mt-12 max-w-2xl border-l-2 border-brand/25 pl-8">
-          {FLOW.map((f) => (
-            <li key={f.time} className="relative pb-9 last:pb-0">
-              <span className="absolute -left-[41px] grid h-8 w-8 place-items-center rounded-full bg-brand text-[11px] font-bold text-white ring-4 ring-brand-tint2">
-                ●
-              </span>
-              <div className="flex items-baseline gap-3">
-                <span className="text-sm font-bold text-brand-dark">{f.time}</span>
-                <span className="text-base font-bold">{f.title}</span>
-              </div>
-              <p className="mt-1 text-sm leading-7 text-ink-soft">{f.body}</p>
-            </li>
-          ))}
-        </ol>
+        <div className="mt-12 grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-center">
+          {/* イラスト（仮） */}
+          <div className="relative aspect-[2/1] overflow-hidden rounded-3xl bg-white ring-1 ring-brand/15 shadow-sm">
+            <Image
+              src="/hp-media/flow.png"
+              alt="太陽やお月さま、時計をあしらった一日の流れのイラスト（仮）"
+              fill
+              sizes="(max-width: 768px) 100vw, 480px"
+              className="object-cover"
+            />
+          </div>
+
+          <ol className="relative border-l-2 border-brand/25 pl-8">
+            {FLOW.map((f) => (
+              <li key={f.time} className="relative pb-9 last:pb-0">
+                <span className="absolute -left-[41px] grid h-8 w-8 place-items-center rounded-full bg-brand text-[11px] font-bold text-white ring-4 ring-brand-tint2">
+                  ●
+                </span>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-sm font-bold text-brand-dark">{f.time}</span>
+                  <span className="text-base font-bold">{f.title}</span>
+                </div>
+                <p className="mt-1 text-sm leading-7 text-ink-soft">{f.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );

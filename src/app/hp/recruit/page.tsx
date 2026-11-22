@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { CONTAINER, JOBS } from "../_lib/site";
 import {
@@ -43,6 +44,15 @@ export default function RecruitPage() {
             未経験の方も、研修とチームでしっかりサポートします。
             一人ひとりのお子さま・ご利用者の毎日を、いっしょに支えてくれる方をお待ちしています。（仮）
           </p>
+          <div className="relative mx-auto mt-10 aspect-[3/1] max-w-3xl overflow-hidden rounded-3xl bg-brand-tint2 ring-1 ring-brand/15">
+            <Image
+              src="/hp-media/recruit.png"
+              alt="両手で包むハートをあしらった採用イメージのイラスト（仮）"
+              fill
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+            />
+          </div>
         </section>
 
         {/* 募集職種 */}
