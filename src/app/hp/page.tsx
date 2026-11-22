@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   SITE_NAME,
   CONTAINER,
@@ -10,7 +11,6 @@ import {
 import { SiteHeader, SiteFooter, SectionLabel } from "./_components/site-chrome";
 import {
   Icon,
-  SunIcon,
   CheckIcon,
   ArrowIcon,
   PhoneIcon,
@@ -86,12 +86,19 @@ function Hero() {
         </div>
 
         <div className="relative">
-          <div className="grid aspect-[4/3] place-items-center rounded-3xl bg-gradient-to-br from-brand/20 to-brand/5 ring-1 ring-brand/15">
-            <div className="text-center text-ink-soft">
-              <SunIcon className="mx-auto h-14 w-14 text-brand" />
-              <p className="mt-3 text-sm">ここにメインの写真が入ります（仮）</p>
-            </div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-brand-tint ring-1 ring-brand/15 shadow-sm">
+            <Image
+              src="/hp-media/hero.png"
+              alt="太陽や木々、花をあしらったやさしいイラスト（仮）"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 560px"
+              className="object-cover"
+            />
           </div>
+          <p className="mt-2 text-center text-xs text-ink-soft">
+            ※ イラストは仮です（お子さま・施設の写真に差し替えできます）
+          </p>
         </div>
       </div>
     </section>
@@ -127,33 +134,45 @@ function Services() {
           {SERVICES.map((s) => (
             <article
               key={s.slug}
-              className="flex flex-col rounded-3xl bg-white p-7 shadow-sm ring-1 ring-black/5 transition hover:shadow-md md:p-9"
+              className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5 transition hover:shadow-md"
             >
-              <div className="flex items-center gap-4">
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-brand text-white">
-                  <Icon name={s.icon} className="h-7 w-7" />
-                </span>
-                <span className="rounded-full bg-brand-tint px-3 py-1 text-xs font-bold text-brand-dark">
-                  {s.tag}
-                </span>
+              {/* イラスト帯（仮） */}
+              <div className="relative aspect-[3/1] bg-brand-tint2">
+                <Image
+                  src={s.image}
+                  alt={`${s.tag}のイメージイラスト（仮）`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 520px"
+                  className="object-cover"
+                />
               </div>
-              <h3 className="mt-5 text-lg font-bold leading-relaxed">{s.title}</h3>
-              <p className="mt-3 flex-1 text-sm leading-7 text-ink-soft">{s.summary}</p>
-              <ul className="mt-5 space-y-2">
-                {s.points.map((p) => (
-                  <li key={p} className="flex items-start gap-2 text-sm">
-                    <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
-                    <span>{p}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={`/hp/services/${s.slug}`}
-                className="mt-6 inline-flex items-center gap-1.5 self-start rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark"
-              >
-                詳しく見る
-                <ArrowIcon className="h-4 w-4" />
-              </Link>
+              <div className="flex flex-1 flex-col p-7 md:p-9">
+                <div className="-mt-12 flex items-center gap-4">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-brand text-white ring-4 ring-white">
+                    <Icon name={s.icon} className="h-7 w-7" />
+                  </span>
+                  <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-brand-dark shadow-sm">
+                    {s.tag}
+                  </span>
+                </div>
+                <h3 className="mt-5 text-lg font-bold leading-relaxed">{s.title}</h3>
+                <p className="mt-3 flex-1 text-sm leading-7 text-ink-soft">{s.summary}</p>
+                <ul className="mt-5 space-y-2">
+                  {s.points.map((p) => (
+                    <li key={p} className="flex items-start gap-2 text-sm">
+                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={`/hp/services/${s.slug}`}
+                  className="mt-6 inline-flex items-center gap-1.5 self-start rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark"
+                >
+                  詳しく見る
+                  <ArrowIcon className="h-4 w-4" />
+                </Link>
+              </div>
             </article>
           ))}
         </div>

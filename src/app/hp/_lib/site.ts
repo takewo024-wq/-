@@ -23,6 +23,7 @@ export const NAV: { label: string; href: string }[] = [
 export type Service = {
   slug: string;
   icon: IconName;
+  image: string; // カードや詳細ページで使うイラスト（仮）
   tag: string;
   title: string;
   summary: string; // トップのカード用の短い説明
@@ -37,6 +38,7 @@ export const SERVICES: Service[] = [
   {
     slug: "houkago-day",
     icon: "backpack",
+    image: "/hp-media/service-houkago-day.png",
     tag: "放課後等デイサービス",
     title: "重症心身障がい児に対応した放課後の居場所",
     summary:
@@ -61,6 +63,7 @@ export const SERVICES: Service[] = [
   {
     slug: "seikatsu-kaigo",
     icon: "heart",
+    image: "/hp-media/service-seikatsu-kaigo.png",
     tag: "生活介護",
     title: "日中を安心して過ごせる活動の場",
     summary:

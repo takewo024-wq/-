@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CONTAINER, SERVICES, getService } from "../../_lib/site";
@@ -48,6 +49,18 @@ export default async function ServiceDetailPage({ params }: Props) {
         />
 
         <section className={`${CONTAINER} py-14 md:py-20`}>
+          {/* イラスト帯（仮） */}
+          <div className="relative mb-10 aspect-[16/6] overflow-hidden rounded-3xl bg-brand-tint2 ring-1 ring-brand/15">
+            <Image
+              src={service.image}
+              alt={`${service.tag}のイメージイラスト（仮）`}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1100px"
+              className="object-cover"
+            />
+          </div>
+
           <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
             {/* 左：内容 */}
             <div>
