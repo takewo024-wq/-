@@ -23,7 +23,7 @@ export default function ServicesPage() {
         <PageHeader
           title="サービス紹介"
           lead="重症心身障がいのあるお子さま・方への、2つのサービスをご用意しています。"
-          crumbs={[{ label: "ホーム", href: "/hp" }, { label: "サービス紹介" }]}
+          crumbs={[{ label: "ホーム", href: "/" }, { label: "サービス紹介" }]}
         />
 
         <section className={`${CONTAINER} py-14 md:py-20`}>
@@ -62,7 +62,7 @@ export default function ServicesPage() {
                     ))}
                   </ul>
                   <Link
-                    href={`/hp/services/${s.slug}`}
+                    href={`/services/${s.slug}`}
                     className="mt-6 inline-flex items-center gap-1.5 self-start rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark"
                   >
                     詳しく見る

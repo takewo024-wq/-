@@ -29,8 +29,8 @@ export default async function NewsArticlePage({ params }: Props) {
         <PageHeader
           title={item.title}
           crumbs={[
-            { label: "ホーム", href: "/hp" },
-            { label: "お知らせ", href: "/hp/news" },
+            { label: "ホーム", href: "/" },
+            { label: "お知らせ", href: "/news" },
             { label: item.title },
           ]}
         />
@@ -53,7 +53,7 @@ export default async function NewsArticlePage({ params }: Props) {
 
           <div className="mt-12 border-t border-black/5 pt-8">
             <Link
-              href="/hp/news"
+              href="/news"
               className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-white px-5 py-2.5 text-sm font-bold text-brand-dark transition hover:bg-brand-tint"
             >
               ← お知らせ一覧へ戻る

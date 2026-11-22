@@ -42,8 +42,8 @@ export default async function ServiceDetailPage({ params }: Props) {
           title={service.tag}
           lead={service.lead}
           crumbs={[
-            { label: "ホーム", href: "/hp" },
-            { label: "サービス紹介", href: "/hp/services" },
+            { label: "ホーム", href: "/" },
+            { label: "サービス紹介", href: "/services" },
             { label: service.tag },
           ]}
         />
@@ -100,7 +100,7 @@ export default async function ServiceDetailPage({ params }: Props) {
                   ))}
                 </dl>
                 <Link
-                  href="/hp#contact"
+                  href="/#contact"
                   className="mt-5 block rounded-full bg-brand px-6 py-3.5 text-center text-sm font-bold text-white transition hover:bg-brand-dark"
                 >
                   見学・ご相談はこちら
@@ -116,7 +116,7 @@ export default async function ServiceDetailPage({ params }: Props) {
               {SERVICES.filter((s) => s.slug !== service.slug).map((s) => (
                 <Link
                   key={s.slug}
-                  href={`/hp/services/${s.slug}`}
+                  href={`/services/${s.slug}`}
                   className="inline-flex items-center gap-2 rounded-full border border-brand/40 bg-white px-5 py-2.5 text-sm font-bold text-brand-dark transition hover:bg-brand-tint"
                 >
                   <Icon name={s.icon} className="h-4 w-4" />

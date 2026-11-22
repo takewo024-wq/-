@@ -31,7 +31,7 @@ export default function RecruitPage() {
         <PageHeader
           title="採用情報"
           lead="子どもたちの「できた」を、いっしょに支えてくださる仲間を募集しています。"
-          crumbs={[{ label: "ホーム", href: "/hp" }, { label: "採用情報" }]}
+          crumbs={[{ label: "ホーム", href: "/" }, { label: "採用情報" }]}
         />
 
         {/* メッセージ */}
@@ -115,7 +115,7 @@ export default function RecruitPage() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
-                href="/hp#contact"
+                href="/#contact"
                 className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-brand-dark shadow-md transition hover:bg-brand-tint"
               >
                 応募・お問い合わせへ

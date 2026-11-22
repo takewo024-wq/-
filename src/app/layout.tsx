@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// 日本語がきれいに表示される定番フォント（参考サイトと同じ Noto Sans JP）
+const notoSansJP = Noto_Sans_JP({
+  variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "AI社員の会社",
-  description: "AI社員とチャットしながら会社を運営するアプリ",
+  title: "児童発達支援・生活介護 ◯◯（仮） | 重症心身障がいのお子さま・方へ",
+  description:
+    "重症心身障がいに対応した放課後等デイサービスと生活介護の事業所です（※施設名・内容は仮の内容です）。看護師による医療的ケア、送迎、一人ひとりに合わせた個別支援で、ご本人とご家族に寄り添います。",
 };
 
 export default function RootLayout({
@@ -23,11 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="ja" className={`${notoSansJP.variable} h-full antialiased`}>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

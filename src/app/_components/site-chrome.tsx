@@ -9,7 +9,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-black/5 bg-white/90 backdrop-blur">
       <div className={`${CONTAINER} flex items-center justify-between gap-4 py-3`}>
-        <Link href="/hp" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-full bg-brand text-white">
             <LeafIcon className="h-5 w-5" />
           </span>
@@ -33,7 +33,7 @@ export function SiteHeader() {
             </Link>
           ))}
           <Link
-            href="/hp#contact"
+            href="/#contact"
             className="rounded-full bg-brand px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-brand-dark"
           >
             見学・ご相談
@@ -85,17 +85,17 @@ export function SiteFooter() {
         <div>
           <h3 className="text-sm font-bold">サービス</h3>
           <ul className="mt-4 space-y-2 text-sm text-white/75">
-            <li><Link href="/hp/services/houkago-day" className="hover:text-white">放課後等デイサービス</Link></li>
-            <li><Link href="/hp/services/seikatsu-kaigo" className="hover:text-white">生活介護</Link></li>
-            <li><Link href="/hp/services" className="hover:text-white">サービス一覧</Link></li>
+            <li><Link href="/services/houkago-day" className="hover:text-white">放課後等デイサービス</Link></li>
+            <li><Link href="/services/seikatsu-kaigo" className="hover:text-white">生活介護</Link></li>
+            <li><Link href="/services" className="hover:text-white">サービス一覧</Link></li>
           </ul>
         </div>
         <div>
           <h3 className="text-sm font-bold">事業所</h3>
           <ul className="mt-4 space-y-2 text-sm text-white/75">
-            <li><Link href="/hp/news" className="hover:text-white">お知らせ</Link></li>
-            <li><Link href="/hp/recruit" className="hover:text-white">採用情報</Link></li>
-            <li><Link href="/hp#contact" className="hover:text-white">お問い合わせ</Link></li>
+            <li><Link href="/news" className="hover:text-white">お知らせ</Link></li>
+            <li><Link href="/recruit" className="hover:text-white">採用情報</Link></li>
+            <li><Link href="/#contact" className="hover:text-white">お問い合わせ</Link></li>
             <li><a href="#" className="hover:text-white">個人情報保護方針（仮）</a></li>
           </ul>
         </div>
@@ -171,7 +171,7 @@ export function ContactCta() {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
-            href="/hp#contact"
+            href="/#contact"
             className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-brand-dark shadow-md transition hover:bg-brand-tint"
           >
             お問い合わせへ

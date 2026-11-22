@@ -18,7 +18,7 @@ export default function NewsListPage() {
         <PageHeader
           title="お知らせ"
           lead="事業所からのお知らせや行事の報告をお届けします。"
-          crumbs={[{ label: "ホーム", href: "/hp" }, { label: "お知らせ" }]}
+          crumbs={[{ label: "ホーム", href: "/" }, { label: "お知らせ" }]}
         />
 
         <section className={`${CONTAINER} py-14 md:py-20`}>
@@ -37,7 +37,7 @@ export default function NewsListPage() {
             {NEWS.map((n) => (
               <li key={n.slug}>
                 <Link
-                  href={`/hp/news/${n.slug}`}
+                  href={`/news/${n.slug}`}
                   className="group flex flex-col gap-2 py-6 transition hover:bg-brand-tint2 sm:flex-row sm:items-center sm:gap-5"
                 >
                   <span className="text-sm text-ink-soft">{n.date}</span>
