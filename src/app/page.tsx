@@ -3,6 +3,7 @@ import Image from "next/image";
 import {
   SITE_NAME,
   CONTAINER,
+  CONTACT,
   SERVICES,
   FEATURES,
   FLOW,
@@ -26,8 +27,8 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-white text-ink">
       <div className="bg-brand-deep text-center text-[12px] leading-relaxed text-white/95 px-4 py-2">
-        ※ これはデザインの下書きです。写真・文章・事業所名・電話番号などはすべて
-        <span className="font-bold">仮の内容</span>で、後から差し替えられます。
+        ※ デザインの下書きです。事業所情報は実際の内容を反映していますが、写真はイラストで代用し、
+        一部の項目（<span className="font-bold">対象年齢・料金・営業日・送迎など</span>）は「要確認」です。
       </div>
 
       <SiteHeader />
@@ -331,19 +332,24 @@ function Contact() {
         <div className="rounded-3xl border border-black/5 bg-brand-tint2 p-8">
           <dl className="space-y-5">
             <ContactRow icon={<PhoneIcon className="h-5 w-5" />} label="お電話">
-              <a href="tel:0000000000" className="text-2xl font-bold text-brand-dark">
-                000-000-0000
+              <a
+                href={`tel:${CONTACT.tel.replace(/-/g, "")}`}
+                className="text-2xl font-bold text-brand-dark"
+              >
+                {CONTACT.tel}
               </a>
-              <p className="mt-1 text-xs text-ink-soft">受付時間：平日 9:00〜18:00（仮）</p>
+              <p className="mt-1 text-xs text-ink-soft">受付時間：{CONTACT.hours}</p>
             </ContactRow>
             <ContactRow icon={<PinIcon className="h-5 w-5" />} label="所在地">
-              〒000-0000
+              {CONTACT.postal}
               <br />
-              ◯◯県◯◯市◯◯町 0-0-0（仮）
+              {CONTACT.address}
+              <br />
+              <span className="text-xs text-ink-soft">{CONTACT.access}</span>
             </ContactRow>
           </dl>
           <a
-            href="mailto:info@example.com"
+            href={`mailto:${CONTACT.email}`}
             className="mt-7 block rounded-full bg-brand px-6 py-3.5 text-center text-sm font-bold text-white transition hover:bg-brand-dark"
           >
             メールでお問い合わせ

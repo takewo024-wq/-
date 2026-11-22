@@ -22,9 +22,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const service = getService(slug);
-  if (!service) return { title: "サービス | ひだまり（仮）" };
+  if (!service) return { title: "サービス | めいと" };
   return {
-    title: `${service.tag} | ひだまり（仮）`,
+    title: `${service.tag} | めいと`,
     description: service.lead,
   };
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SITE_NAME, CONTAINER, NAV } from "../_lib/site";
+import { SITE_NAME, ORG_NAME, CONTACT, CONTAINER, NAV } from "../_lib/site";
 import { LeafIcon } from "./icons";
 
 /* =========================================================
@@ -77,9 +77,13 @@ export function SiteFooter() {
             <span className="text-lg font-bold">{SITE_NAME}</span>
           </div>
           <p className="mt-4 text-sm leading-7 text-white/75">
-            放課後等デイサービス・生活介護
+            {ORG_NAME}
             <br />
-            重症心身障がいのあるお子さま・方への支援（仮）
+            生活介護・放課後等デイサービス
+            <br />
+            {CONTACT.postal} {CONTACT.address}
+            <br />
+            TEL: {CONTACT.tel}
           </p>
         </div>
         <div>
@@ -177,10 +181,10 @@ export function ContactCta() {
             お問い合わせへ
           </Link>
           <a
-            href="tel:0000000000"
+            href={`tel:${CONTACT.tel.replace(/-/g, "")}`}
             className="rounded-full border border-white/60 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
           >
-            000-000-0000（仮）
+            {CONTACT.tel}
           </a>
         </div>
       </div>

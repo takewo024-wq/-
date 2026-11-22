@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { CONTAINER, JOBS } from "../_lib/site";
+import { CONTAINER, CONTACT, JOBS } from "../_lib/site";
 import {
   SiteHeader,
   SiteFooter,
@@ -11,7 +11,7 @@ import {
 import { CheckIcon } from "../_components/icons";
 
 export const metadata: Metadata = {
-  title: "採用情報 | ひだまり（仮）",
+  title: "採用情報 | めいと",
   description: "看護師・児童指導員・生活支援員などを募集しています（仮の内容です）。",
 };
 
@@ -121,10 +121,10 @@ export default function RecruitPage() {
                 応募・お問い合わせへ
               </Link>
               <a
-                href="tel:0000000000"
+                href={`tel:${CONTACT.tel.replace(/-/g, "")}`}
                 className="rounded-full border border-white/60 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
               >
-                000-000-0000（仮）
+                {CONTACT.tel}
               </a>
             </div>
           </div>

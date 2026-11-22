@@ -6,7 +6,7 @@ import { SiteHeader, SiteFooter, PageHeader } from "../_components/site-chrome";
 import { ArrowIcon } from "../_components/icons";
 
 export const metadata: Metadata = {
-  title: "お知らせ | ひだまり（仮）",
+  title: "お知らせ | めいと",
   description: "事業所からのお知らせ一覧（仮の内容です）。",
 };
 

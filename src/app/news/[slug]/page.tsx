@@ -13,8 +13,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const item = getNews(slug);
-  if (!item) return { title: "お知らせ | ひだまり（仮）" };
-  return { title: `${item.title} | ひだまり（仮）`, description: item.body[0] };
+  if (!item) return { title: "お知らせ | めいと" };
+  return { title: `${item.title} | めいと`, description: item.body[0] };
 }
 
 export default async function NewsArticlePage({ params }: Props) {

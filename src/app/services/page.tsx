@@ -11,7 +11,7 @@ import {
 import { Icon, CheckIcon, ArrowIcon } from "../_components/icons";
 
 export const metadata: Metadata = {
-  title: "サービス紹介 | ひだまり（仮）",
+  title: "サービス紹介 | めいと",
   description: "放課後等デイサービスと生活介護のご案内（仮の内容です）。",
 };
 
