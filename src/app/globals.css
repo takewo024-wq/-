@@ -10,6 +10,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* 介護・障がい福祉サイト用ブランドカラー（温かい緑）。
+     参考サイトの配色の「考え方」を踏襲しつつ、独自の値に調整したもの。 */
+  --color-brand: #5cb247;
+  --color-brand-dark: #3f8f39;
+  --color-brand-deep: #2f6f2b;
+  --color-brand-tint: #eef7e9;
+  --color-brand-tint2: #f6fbf3;
+  --color-ink: #2f3330;
+  --color-ink-soft: #5b625c;
+  --font-jp: var(--font-noto-sans-jp);
 }
 
 @media (prefers-color-scheme: dark) {
