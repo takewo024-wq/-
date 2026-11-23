@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { employeeList, employees, EmployeeId } from "@/lib/employees";
 
 interface ChatMessage {
@@ -16,11 +16,30 @@ const initialThreads: Threads = employeeList.reduce((acc, e) => {
 }, {} as Threads);
 
 export default function Home() {
+  const [authed, setAuthed] = useState<boolean | null>(null); // null = 判定中
   const [activeId, setActiveId] = useState<EmployeeId>(employeeList[0].id);
   const [threads, setThreads] = useState<Threads>(initialThreads);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 初回マウント時にセッションの有効性を確認
+  useEffect(() => {
+    let active = true;
+    fetch("/api/session")
+      .then((r) => r.json())
+      .then((d) => active && setAuthed(Boolean(d.authed)))
+      .catch(() => active && setAuthed(false));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function logout() {
+    await fetch("/api/logout", { method: "POST" });
+    setThreads(initialThreads);
+    setAuthed(false);
+  }
 
   const activeEmployee = employees[activeId];
   const messages = threads[activeId];
@@ -41,6 +60,12 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ employeeId: activeId, messages: nextMessages }),
       });
+
+      if (res.status === 401) {
+        setAuthed(false);
+        throw new Error("セッションが切れました。再度ログインしてください。");
+      }
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "エラーが発生しました。");
 
@@ -53,6 +78,18 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authed === null) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-sm opacity-60">
+        読み込み中...
+      </div>
+    );
+  }
+
+  if (!authed) {
+    return <Login onSuccess={() => setAuthed(true)} />;
   }
 
   return (
@@ -80,6 +117,12 @@ export default function Home() {
             </button>
           ))}
         </nav>
+        <button
+          onClick={logout}
+          className="m-3 rounded-lg border border-black/10 dark:border-white/20 px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        >
+          ログアウト
+        </button>
       </aside>
 
       <main className="flex-1 flex flex-col">
@@ -139,6 +182,71 @@ export default function Home() {
           </button>
         </form>
       </main>
+    </div>
+  );
+}
+
+function Login({ onSuccess }: { onSuccess: () => void }) {
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!password || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "ログインに失敗しました。");
+      setPassword("");
+      onSuccess();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "ログインに失敗しました。");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-1 items-center justify-center p-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+        className="w-full max-w-sm flex flex-col gap-4 rounded-xl border border-black/10 dark:border-white/15 p-6"
+      >
+        <div>
+          <h1 className="font-semibold text-lg">🏢 AI社員の会社</h1>
+          <p className="text-sm opacity-60 mt-1">続けるにはパスワードを入力してください。</p>
+        </div>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="パスワード"
+          autoFocus
+          className="rounded-lg border border-black/10 dark:border-white/20 bg-transparent px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={loading}
+        />
+        {error && (
+          <div className="rounded-lg px-3 py-2 text-sm bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">
+            {error}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={loading || !password}
+          className="rounded-lg bg-blue-600 text-white px-5 py-2 font-medium disabled:opacity-40"
+        >
+          {loading ? "確認中..." : "ログイン"}
+        </button>
+      </form>
     </div>
   );
 }
