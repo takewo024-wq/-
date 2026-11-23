@@ -15,6 +15,41 @@ const initialThreads: Threads = employeeList.reduce((acc, e) => {
   return acc;
 }, {} as Threads);
 
+const STORAGE_KEY = "ai_company_threads_v1";
+
+/** localStorage から会話履歴を読み込む（壊れていれば初期値にフォールバック）。 */
+function loadThreads(): Threads {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return initialThreads;
+    const parsed = JSON.parse(raw) as Partial<Record<EmployeeId, ChatMessage[]>>;
+    const merged: Threads = { ...initialThreads };
+    for (const e of employeeList) {
+      const arr = parsed[e.id];
+      if (Array.isArray(arr) && arr.length > 0) merged[e.id] = arr;
+    }
+    return merged;
+  } catch {
+    return initialThreads;
+  }
+}
+
+function saveThreads(threads: Threads) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(threads));
+  } catch {
+    // localStorage が使えない環境では黙って無視（履歴は非永続になる）
+  }
+}
+
+function clearThreads() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // 無視
+  }
+}
+
 export default function Home() {
   const [authed, setAuthed] = useState<boolean | null>(null); // null = 判定中
   const [activeId, setActiveId] = useState<EmployeeId>(employeeList[0].id);
@@ -23,33 +58,51 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 初回マウント時にセッションの有効性を確認
+  // 初回マウント時にセッションの有効性を確認し、保存済みの会話履歴を読み込む
   useEffect(() => {
     let active = true;
-    fetch("/api/session")
-      .then((r) => r.json())
-      .then((d) => active && setAuthed(Boolean(d.authed)))
-      .catch(() => active && setAuthed(false));
+    (async () => {
+      const stored = loadThreads();
+      if (active) setThreads(stored);
+      try {
+        const r = await fetch("/api/session");
+        const d = await r.json();
+        if (active) setAuthed(Boolean(d.authed));
+      } catch {
+        if (active) setAuthed(false);
+      }
+    })();
     return () => {
       active = false;
     };
   }, []);
 
+  // 会話履歴が変わるたびに localStorage へ保存（ブラウザ単位で永続化）
+  useEffect(() => {
+    saveThreads(threads);
+  }, [threads]);
+
   async function logout() {
     await fetch("/api/logout", { method: "POST" });
+    clearThreads();
     setThreads(initialThreads);
     setAuthed(false);
   }
 
   const activeEmployee = employees[activeId];
   const messages = threads[activeId];
+  const lastMsg = messages[messages.length - 1];
+  // 最初のトークンが届くまで「入力中...」を表示する
+  const showTyping =
+    loading && !(lastMsg?.role === "assistant" && lastMsg.content.length > 0);
 
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
 
+    const threadId = activeId;
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content: text }];
-    setThreads((prev) => ({ ...prev, [activeId]: nextMessages }));
+    setThreads((prev) => ({ ...prev, [threadId]: nextMessages }));
     setInput("");
     setLoading(true);
     setError(null);
@@ -58,7 +111,7 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeId: activeId, messages: nextMessages }),
+        body: JSON.stringify({ employeeId: threadId, messages: nextMessages }),
       });
 
       if (res.status === 401) {
@@ -66,13 +119,33 @@ export default function Home() {
         throw new Error("セッションが切れました。再度ログインしてください。");
       }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "エラーが発生しました。");
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "エラーが発生しました。");
+      }
 
+      // 空のアシスタント枠を追加し、ストリームの text を順次追記していく
       setThreads((prev) => ({
         ...prev,
-        [activeId]: [...prev[activeId], { role: "assistant", content: data.reply }],
+        [threadId]: [...prev[threadId], { role: "assistant", content: "" }],
       }));
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+        setThreads((prev) => {
+          const thread = [...prev[threadId]];
+          thread[thread.length - 1] = { role: "assistant", content: acc };
+          return { ...prev, [threadId]: thread };
+        });
+      }
+
+      if (!acc) throw new Error("応答が空でした。");
     } catch (e) {
       setError(e instanceof Error ? e.message : "エラーが発生しました。");
     } finally {
@@ -135,19 +208,21 @@ export default function Home() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`max-w-2xl whitespace-pre-wrap rounded-lg px-4 py-2 ${
-                m.role === "user"
-                  ? "self-end bg-blue-600 text-white"
-                  : "self-start bg-black/5 dark:bg-white/10"
-              }`}
-            >
-              {m.content}
-            </div>
-          ))}
-          {loading && (
+          {messages.map((m, i) =>
+            m.content.length === 0 ? null : (
+              <div
+                key={i}
+                className={`max-w-2xl whitespace-pre-wrap rounded-lg px-4 py-2 ${
+                  m.role === "user"
+                    ? "self-end bg-blue-600 text-white"
+                    : "self-start bg-black/5 dark:bg-white/10"
+                }`}
+              >
+                {m.content}
+              </div>
+            )
+          )}
+          {showTyping && (
             <div className="self-start rounded-lg px-4 py-2 bg-black/5 dark:bg-white/10 opacity-60">
               入力中...
             </div>

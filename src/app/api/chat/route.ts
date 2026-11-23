@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-import { employees } from "@/lib/employees";
+import { employees, DEFAULT_MODEL } from "@/lib/employees";
 import { verifySessionToken, SESSION_COOKIE } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/ratelimit";
 import { validateChatBody } from "@/lib/validation";
@@ -57,23 +57,24 @@ export async function POST(req: NextRequest) {
 
   const client = new Anthropic({ apiKey });
 
+  // 5) ストリーミング応答: text_delta を順次クライアントへ流す
+  const anthropicStream = client.messages.stream({
+    model: employee.model ?? DEFAULT_MODEL,
+    max_tokens: 2048,
+    system: employee.systemPrompt,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    ...(employee.webSearch
+      ? { tools: [{ type: "web_search_20260209" as const, name: "web_search" as const }] }
+      : {}),
+  });
+
+  const iterator = anthropicStream[Symbol.asyncIterator]();
+
+  // 最初のイベントを先読みして、即時失敗（無効なキー・モデル等）を
+  // ストリーム開始前に捕捉し、クリーンな JSON エラーで返す。
+  let firstResult: IteratorResult<Anthropic.MessageStreamEvent>;
   try {
-    const response = await client.messages.create({
-      model: "claude-opus-4-8",
-      max_tokens: 2048,
-      system: employee.systemPrompt,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      ...(employee.webSearch
-        ? { tools: [{ type: "web_search_20260209" as const, name: "web_search" as const }] }
-        : {}),
-    });
-
-    const text = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === "text")
-      .map((block) => block.text)
-      .join("\n");
-
-    return NextResponse.json({ reply: text });
+    firstResult = await iterator.next();
   } catch (err) {
     console.error(err);
     return NextResponse.json(
@@ -81,4 +82,39 @@ export async function POST(req: NextRequest) {
       { status: 502 }
     );
   }
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const enqueueText = (event: Anthropic.MessageStreamEvent) => {
+        if (
+          event.type === "content_block_delta" &&
+          event.delta.type === "text_delta"
+        ) {
+          controller.enqueue(encoder.encode(event.delta.text));
+        }
+      };
+
+      try {
+        let result = firstResult;
+        while (!result.done) {
+          enqueueText(result.value);
+          result = await iterator.next();
+        }
+        controller.close();
+      } catch (err) {
+        console.error(err);
+        // 送信途中での失敗。受信済みの部分テキストはクライアント側に残る。
+        controller.error(err);
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }

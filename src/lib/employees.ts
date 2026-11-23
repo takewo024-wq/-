@@ -1,5 +1,12 @@
 export type EmployeeId = "secretary" | "engineer" | "writer" | "researcher" | "marketer";
 
+/**
+ * 既定モデル。社員ごとに `model` を指定しない場合に使われる。
+ * ここで指定するモデルIDは、利用中の Anthropic アカウントで有効なものにすること。
+ * 例: 最高品質にしたい場合は "claude-opus-5-5" に変更。
+ */
+export const DEFAULT_MODEL = "claude-sonnet-5-5";
+
 export interface Employee {
   id: EmployeeId;
   name: string;
@@ -8,6 +15,8 @@ export interface Employee {
   systemPrompt: string;
   greeting: string;
   webSearch?: boolean;
+  /** この社員が使うモデルID。未指定なら DEFAULT_MODEL。用途に応じてコスト最適化する。 */
+  model?: string;
 }
 
 export const employees: Record<EmployeeId, Employee> = {
@@ -16,6 +25,8 @@ export const employees: Record<EmployeeId, Employee> = {
     name: "佐藤 静香",
     role: "CEO秘書",
     avatar: "🗂️",
+    // 定型的な整理・振り分けが中心のため、軽量で安価なモデルを使用
+    model: "claude-haiku-5-5",
     greeting: "お疲れ様です、社長。本日のご用件は何でしょうか？タスクの整理やスケジュール調整、他の社員への振り分けなどお任せください。",
     systemPrompt: `あなたは「佐藤静香」、この会社のCEO秘書を務めるAI社員です。
 役割:
