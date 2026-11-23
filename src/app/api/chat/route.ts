@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   // 2) レート制限: IP 単位で過剰なリクエストを抑止
   const ip = getClientIp(req.headers);
-  const rl = rateLimit(`chat:${ip}`);
+  const rl = await rateLimit(`chat:${ip}`);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "リクエストが多すぎます。少し待ってからお試しください。" },

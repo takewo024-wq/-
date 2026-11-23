@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   // ログイン試行にもレート制限をかけ、総当たりを抑止する
   const ip = getClientIp(req.headers);
-  const rl = rateLimit(`login:${ip}`);
+  const rl = await rateLimit(`login:${ip}`);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "試行回数が多すぎます。しばらくしてからお試しください。" },
